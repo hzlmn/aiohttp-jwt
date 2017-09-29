@@ -1,45 +1,63 @@
 import sys
 import logging
 import asyncio
+import re
 import types
 import inspect
 
 try:
     import aiohttp
 except ImportError:
-    sys.stdout.write(
-        'This middleware works ONLY with `aiohttp` package, so make sure you have installed it.'
-    )
+    sys.stdout.write("""
+        This middleware works ONLY with `aiohttp` package, so make sure you have installed it.
+        For more information about this module, please go to http://github.com/route .
+    """)
+
     sys.exit(1)
 
-logger = logging.getLogger('aiohttp_jwt_middleware')
+logger = logging.getLogger(__name__)
 
 _config = dict()
 
+def check_request(request, entries):
+    '''Check if request.path match group of certain patterns.'''
 
-def match_request(request, match):
-    pass
+    for pattern in entries:
+        if re.match(pattern, request.path):
+            return True
+
+    return False
 
 
-def _isfunction(data):
-    return ( data and type(data).__name__ == 'function' )
+async def _decode_token(token, secret, _algo=None):
+    '''Decode JWT token by secret or public key information'''
 
-
-def jwt(getToken=None):
-    if not _isfunction(getToken):
-        raise TypeError(
-            '"getToken" should be a function type'
+    try:
+        jwt.decode(token, secret)
+    except Exception as error:
+        logger.error(
+            'Error of decoding jwt token - {}'.format(error)
         )
 
-    # if not (secret and type(secret) is str):
-    #     raise Exception('\'secret\' should be provided')
 
-    # _config['property'] = 'test'
+def jwt(secret=None, getToken=None, ignore=list()):
+
+    if not (secret and type(secret) is str):
+        raise TypeError("""
+            Some problems occur in the process of library initialization
+
+            _  'secret' or 'secretGetter' should be provided for correct work of JWT middleware.
+                You can read more about JWT specification here https://jwt.io/introduction/
+
+            Also make sure you checked documentation
+        """)
 
     async def factory(app, handler):
         async def middleware(request):
-            logger.info('jwt_middleware')
-            print("Test")
+            print('Route {}'.format(request.path))
+            if not check_request(request, ignore):
+                logger.error('Middleware Activated')
+
             # auth_header = request.headers.get('Authorization', None)
             # if auth_header:
             #     bearer_token = auth_header.split(' ')
@@ -52,4 +70,5 @@ def jwt(getToken=None):
             #                 request['token'] = jwt_token
             return await handler(request)
         return middleware
+
     return factory

@@ -1,7 +1,7 @@
 import logging
 
 from aiohttp import web
-from aiohttp_jwt.middleware import jwt
+from ..aiohttp_jwt.middleware import jwt
 from aiohttp.web import json_response
 
 logging.basicConfig()
