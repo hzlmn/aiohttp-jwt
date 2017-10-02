@@ -4,8 +4,7 @@ import asyncio
 import re
 import types
 import inspect
-
-from .errors import _get_friendly_error
+import jwt
 
 try:
     import aiohttp
@@ -32,12 +31,19 @@ def check_request(request, entries):
     return False
 
 
-async def get_token_info(token, secret):
+async def get_token_info(token, secret, options=dict()):
     '''Decode JWT token by secret or public key information'''
     jwt_payload = dict()
 
     try:
-        jwt_payload = jwt.decode(token, secret)
+        jwt_payload = jwt.decode(
+            token, secret,
+            options=options
+        )
+
+    except jwt.ExpiredSignatureError as error:
+        logger.error('Token is expired')
+
     except Exception as error:
         logger.error(
             'Error of decoding jwt token - {}'.format(error)
@@ -46,15 +52,15 @@ async def get_token_info(token, secret):
     return jwt_payload
 
 
-def jwt(secret=None, getToken=None, request_property='payload', whiteList=list(), _pass_through=False):
+def JWTMiddleware(secret=None, request_property='payload', whiteList=list(), store_token=False):
 
     if not (secret and type(secret) is str):
         raise TypeError("""
-            'secret' or 'secretGetter' should be provided for correct work of JWT middleware.
+            'secret' should be provided for correct work of JWT middleware.
 
-            You can read more about JWT specification here https://jwt.io/introduction/
+            You can read more about JWT specification here https://jwt.io/introduction/ .
 
-            Make sure you checked library documentation here
+            Make sure you checked PyJWT library documentation https://pyjwt.readthedocs.io/en/latest/ .
         """)
 
     _config['request_property'] = request_property
@@ -66,11 +72,11 @@ def jwt(secret=None, getToken=None, request_property='payload', whiteList=list()
                 if auth_header:
                     bearer_token = auth_header.split(' ')
                     if len(bearer_token) == 2:
-                        if match(r'Bearer', bearer_token[0]):
+                        if re.match(r'Bearer', bearer_token[0]):
                             jwt_token = bearer_token[1]
                             request[request_property] = await get_token_info(jwt_token, secret)
-                            if _pass_through:
-                                request['jwt_token'] = jwt_token
+                            if (store_token and type(store_token) is str):
+                                request[store_token] = jwt_token
             return await handler(request)
         return middleware
 
