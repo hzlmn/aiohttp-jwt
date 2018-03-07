@@ -6,6 +6,10 @@ def test_throw_on_invalid_params(middleware, request, response):
         middleware('')
 
 
+def test_jwt(middleware, secret):
+    pass
+
+
 def test_jwt_encode(middleware, token, secret):
     import jwt
     decoded = jwt.decode(token, secret)

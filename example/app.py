@@ -1,11 +1,14 @@
 import logging
 from aiohttp import web
+import jwt
 
-from aiohttp_jwt.middleware import jwt_middleware
-from aiohttp_jwt.decorators import ensure_scopes
+from aiohttp_jwt import JWTMiddleware
 from aiohttp.web import json_response
 
 logger = logging.getLogger(__name__)
+
+
+secret = 'test'
 
 
 async def foo_handler(request):
@@ -13,15 +16,22 @@ async def foo_handler(request):
 
 
 async def protected_handler(request):
+    print(request['user'])
     return json_response({'status': 'OK'})
 
 
+async def get_token(request):
+    return jwt.encode({'foo': 'bar'}, secret)
+
 app = web.Application(
     middlewares=[
-        jwt_middleware(
+        JWTMiddleware(
             secret='your secret',
-            whiteList=[
-                r'/(foo/bar)'
+            request_property='user',
+            token_getter=get_token,
+            credentials_required=True,
+            whitelist=[
+                r'/(foo|bar)'
             ],
         ),
     ]
