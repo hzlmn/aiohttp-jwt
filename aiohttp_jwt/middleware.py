@@ -1,28 +1,30 @@
-import sys
-import logging
 import asyncio
-import re
-import types
 import inspect
+import logging
+import re
+import sys
+import types
+
 import jwt
+
+from .exceptions import UnauthorizedError
 
 try:
     import aiohttp
 except ImportError:
     sys.stdout.write("""
         This middleware works ONLY with `aiohttp` package, so make sure you have installed it.
-        For more information about this module, please go to http://github.com/route .
     """)
 
     sys.exit(1)
 
 logger = logging.getLogger(__name__)
 
-_config = dict()
+__config = dict()
 
 
 def check_request(request, entries):
-    '''Check if request.path match group of certain patterns.'''
+    """Check if request.path match group of certain patterns."""
 
     for pattern in entries:
         if re.match(pattern, request.path):
@@ -31,9 +33,10 @@ def check_request(request, entries):
     return False
 
 
-async def get_token_info(token, secret, options=dict()):
-    '''Decode JWT token by secret or public key information'''
-    jwt_payload = dict()
+async def get_token_info(token, secret):
+    """Decode JWT token by secret or public key information"""
+
+    jwt_payload = None
 
     try:
         jwt_payload = jwt.decode(
@@ -44,31 +47,32 @@ async def get_token_info(token, secret, options=dict()):
     except jwt.ExpiredSignatureError as error:
         logger.error('Token is expired')
 
-    except Exception as error:
+    except Exception as exc:
         logger.error(
-            'Error of decoding jwt token - {}'.format(error)
+            'Error of decoding jwt token {}'.format(exc)
         )
 
     return jwt_payload
 
 
-def JWTMiddleware(secret=None, request_property='payload', whiteList=list(), store_token=False):
+def JWTMiddleware(
+    secret,
+    request_property='payload',
+    whiteList=tuple(),
+    store_token=False
+):
+    if not (secret and isinstance(secret, str)):
+        raise ValueError(
+            '`secret` should be provided for correct work of JWT middleware')
 
-    if not (secret and type(secret) is str):
-        raise TypeError("""
-            'secret' should be provided for correct work of JWT middleware.
-
-            You can read more about JWT specification here https://jwt.io/introduction/ .
-
-            Make sure you checked PyJWT library documentation https://pyjwt.readthedocs.io/en/latest/ .
-        """)
-
-    _config['request_property'] = request_property
+    __config['request_property'] = request_property
 
     async def factory(app, handler):
         async def middleware(request):
             if not check_request(request, whiteList):
-                auth_header = request.headers.get('Authorization', None)
+                auth_header = request.headers.get('Authorization')
+                auth_header = auth_header.strip()
+
                 if auth_header:
                     bearer_token = auth_header.split(' ')
                     if len(bearer_token) == 2:
@@ -77,6 +81,13 @@ def JWTMiddleware(secret=None, request_property='payload', whiteList=list(), sto
                             request[request_property] = await get_token_info(jwt_token, secret)
                             if (store_token and type(store_token) is str):
                                 request[store_token] = jwt_token
+                else:
+                    return aiohttp.web.HTTPForbidden(
+                        content_type='application/json',
+                        body=json.dumps({
+                            'error': 'Authorization required'
+                        })
+                    )
             return await handler(request)
         return middleware
 

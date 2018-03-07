@@ -5,10 +5,11 @@ except ImportError:
 
 import logging
 
-from .middleware import _config
 from aiohttp.web import HTTPForbidden
 
-logger = logging.getLogger('aiohttp_jwt_middleware')
+from .middleware import __config
+
+logger = logging.getLogger(__name__)
 
 
 def ensure_scopes(scopes=list(), transform=None):
