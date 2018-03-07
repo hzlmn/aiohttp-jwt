@@ -60,9 +60,9 @@ def JWTMiddleware(
                         token = await token
                 elif 'Authorization' in request.headers:
                     try:
-                        scheme, token = request.headers[
-                            'Authorization',
-                        ].strip().split(' ')
+                        scheme, token = request.headers.get(
+                            'Authorization'
+                        ).strip().split(' ')
 
                         if credentials_required and not re.match(r'Bearer', scheme):  # noqa
                             raise aiohttp.web.HTTPForbidden
@@ -74,9 +74,10 @@ def JWTMiddleware(
                     raise aiohttp.web.HTTPForbidden
 
                 try:
-                    decoded = jwt.decode(token, secret, *args, **kwargs)
-                except jwt.InvalidTokenError as error:
-                    logger.exception(error, exc_info=error)
+                    decoded = jwt.decode(
+                        token.encode(), secret, *args, **kwargs)
+                except jwt.InvalidTokenError as exc:
+                    logger.exception(exc, exc_info=exc)
                     raise aiohttp.web.HTTPForbidden
 
                 deepset(request, request_property, decoded)
