@@ -6,7 +6,6 @@ import sys
 import jwt
 
 from .exceptions import UnauthorizedError  # noqa
-from .utils import deepset
 
 try:
     import aiohttp
@@ -76,11 +75,12 @@ def JWTMiddleware(
                 try:
                     decoded = jwt.decode(
                         token.encode(), secret, *args, **kwargs)
+                    request[request_property] = decoded
+                    if isinstance(store_token, str):
+                        request[store_token] = token
                 except jwt.InvalidTokenError as exc:
                     logger.exception(exc, exc_info=exc)
                     raise aiohttp.web.HTTPForbidden
-
-                deepset(request, request_property, decoded)
 
             return await handler(request)
         return middleware
