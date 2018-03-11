@@ -1,5 +1,4 @@
-- `0.0.1b`
-    > Initial `beta` release
+- [0.0.1-beta] Initial release
 
     *Additions*
 
