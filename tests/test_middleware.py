@@ -40,7 +40,7 @@ def app():
 
 
 def test_throw_on_invalid_secret(middleware, request, response):
-    with pytest.raises(ValueError) as error:
+    with pytest.raises(ValueError):
         JWTMiddleware('')
 
 

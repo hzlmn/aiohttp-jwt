@@ -1,35 +1,43 @@
 import logging
-from aiohttp import web
-import jwt
 
-from aiohttp_jwt import JWTMiddleware
+import jwt
+from aiohttp import web
 from aiohttp.web import json_response
+
+from aiohttp_jwt import JWTMiddleware, ensure_scopes
 
 logger = logging.getLogger(__name__)
 
 
-secret = 'test'
+secret = 'your secret'
 
 
 async def foo_handler(request):
     return json_response({'status': 'OK'})
 
 
+@ensure_scopes(['user:admin'])
 async def protected_handler(request):
-    print(request['user'])
-    return json_response({'status': 'OK'})
+    return json_response({
+        'status': 'OK',
+        'username': payload.get('username'),
+    })
 
 
 async def get_token(request):
-    return jwt.encode({'foo': 'bar'}, secret)
+    return jwt.encode({
+        'username': 'olehkuchuk',
+        'scopes': [
+            'user:admin',
+        ],
+    }, secret)
 
 app = web.Application(
     middlewares=[
         JWTMiddleware(
-            secret='your secret',
+            secret=secret,
             request_property='user',
             token_getter=get_token,
-            credentials_required=True,
             whitelist=[
                 r'/(foo|bar)'
             ],

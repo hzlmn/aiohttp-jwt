@@ -73,10 +73,11 @@ def JWTMiddleware(
                     raise aiohttp.web.HTTPForbidden
 
                 try:
-                    decoded = jwt.decode(
-                        token.encode(), secret, *args, **kwargs)
+                    if not isinstance(token, bytes):
+                        token = token.encode()
+                    decoded = jwt.decode(token, secret, *args, **kwargs)
                     request[request_property] = decoded
-                    if isinstance(store_token, str):
+                    if store_token and isinstance(store_token, str):
                         request[store_token] = token
                 except jwt.InvalidTokenError as exc:
                     logger.exception(exc, exc_info=exc)
