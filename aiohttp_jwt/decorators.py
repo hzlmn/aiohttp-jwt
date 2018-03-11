@@ -6,7 +6,7 @@ from .middleware import __config
 
 logger = logging.getLogger(__name__)
 
-# @TODO: Add more scopes checking strategies
+# TODO: Add more scopes checking strategies
 
 
 def ONE_OF(required, provided):
@@ -35,16 +35,12 @@ def ensure_scopes(
             payload = request.get(request_property)
 
             if not payload:
-                raise web.HTTPForbidden(
-                    reason='Authorization required',
-                )
+                raise web.HTTPForbidden(reason='Authorization required')
 
             user_scopes = payload.get(scopes_property, [])
 
             if not strategy(scopes, user_scopes):
-                raise web.HTTPForbidden(
-                    reason='Insufficient scopes',
-                )
+                raise web.HTTPForbidden(reason='Insufficient scopes')
 
             return await func(request)
         return wrapped
