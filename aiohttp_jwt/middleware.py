@@ -41,10 +41,10 @@ def JWTMiddleware(
 ):
     if not (secret and isinstance(secret, str)):
         raise ValueError(
-            '`secret` should be provided for correct work of JWT middleware')
+            'secret should be provided for correct work of JWT middleware')
 
     if not isinstance(request_property, str):
-        raise TypeError('`request_property` should be str')
+        raise TypeError('request_property should be a str')
 
     __config['request_property'] = request_property
 
@@ -67,21 +67,27 @@ def JWTMiddleware(
                             raise aiohttp.web.HTTPForbidden
 
                     except Exception as error:
-                        raise aiohttp.web.HTTPForbidden
+                        raise aiohttp.web.HTTPForbidden(
+                            reason='Invalid authorization header',
+                        )
 
                 if not token and credentials_required:
-                    raise aiohttp.web.HTTPForbidden
-
-                try:
-                    if not isinstance(token, bytes):
-                        token = token.encode()
-                    decoded = jwt.decode(token, secret, *args, **kwargs)
-                    request[request_property] = decoded
-                    if store_token and isinstance(store_token, str):
-                        request[store_token] = token
-                except jwt.InvalidTokenError as exc:
-                    logger.exception(exc, exc_info=exc)
-                    raise aiohttp.web.HTTPForbidden
+                    raise aiohttp.web.HTTPForbidden(
+                        reason='Missing authorization token',
+                    )
+                elif token:
+                    try:
+                        if not isinstance(token, bytes):
+                            token = token.encode()
+                        decoded = jwt.decode(token, secret, *args, **kwargs)
+                        request[request_property] = decoded
+                        if store_token and isinstance(store_token, str):
+                            request[store_token] = token
+                    except jwt.InvalidTokenError as exc:
+                        logger.exception(exc, exc_info=exc)
+                        raise aiohttp.web.HTTPForbidden(
+                            reason='Invalid token',
+                        )
 
             return await handler(request)
         return middleware
