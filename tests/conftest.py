@@ -1,5 +1,6 @@
-import pytest
 import jwt
+import pytest
+
 from aiohttp_jwt import JWTMiddleware
 
 

@@ -52,14 +52,14 @@ async def test_middleware(loop, app, test_client):
     assert (await response.json()) == {}
 
     token = jwt.encode({'foo': 'bar'}, 'secret')
-    authorization = f"Bearer {token.decode('utf-8')}"
+    authorization = 'Bearer {token}'.format(token=token.decode('utf-8'))
     response = await client.get('/protected', headers={
         'Authorization': authorization,
     })
     assert response.status == 403
 
     token = jwt.encode({'foo': 'bar'}, 'your secret')
-    authorization = f"Bearer {token.decode('utf-8')}"
+    authorization = 'Bearer {token}'.format(token=token.decode('utf-8'))
     response = await client.get('/protected', headers={
         'Authorization': authorization,
     })
