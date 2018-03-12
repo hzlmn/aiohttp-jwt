@@ -4,8 +4,9 @@ import jwt
 from aiohttp import web
 from aiohttp.web import json_response
 
-from aiohttp_jwt import JWTMiddleware, ensure_scopes
+from aiohttp_jwt import JWTMiddleware, check_permissions
 from aiohttp_jwt.decorators import ONE_OF
+from aiohttp_jwt.permissions import check_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -17,10 +18,10 @@ async def foo_handler(request):
     return json_response({'status': 'OK'})
 
 
-@ensure_scopes(
-    scopes=['user:admin', 'olehkuchuk'],
-    strategy=ONE_OF,
-)
+@check_permissions([
+    'user:admin',
+    'olehkuchuk',
+], strategy=ONE_OF)
 async def protected_handler(request):
     payload = request.get('user', {})
     return json_response({

@@ -23,7 +23,7 @@ def app():
     app = web.Application(
         middlewares=[
             JWTMiddleware(
-                secret='your secret',
+                'your secret',
                 request_property='user',
                 credentials_required=True,
                 whitelist=[

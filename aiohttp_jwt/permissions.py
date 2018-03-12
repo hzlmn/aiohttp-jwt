@@ -7,6 +7,12 @@ from .middleware import __config
 
 logger = logging.getLogger(__name__)
 
+__ALL__ = (
+    'ONE_OF',
+    'ALL_IN',
+    'check_permissions',
+)
+
 
 def ONE_OF(required, provided):
     for scope in provided:
@@ -19,13 +25,13 @@ def ALL_IN(required, provided):
     return set(required).issubset(set(provided))
 
 
-def ensure_scopes(
+def check_permissions(
     scopes,
     permissions_property='scopes',
     strategy=ALL_IN,
 ):
     if not callable(strategy):
-        raise ValueError('strategy should be a func')
+        raise TypeError('strategy should be a func')
 
     if isinstance(scopes, str):
         scopes = scopes.split(' ')
@@ -36,7 +42,7 @@ def ensure_scopes(
             payload = request.get(request_property)
 
             if not payload:
-                raise web.HTTPForbidden(reason='Authorization required')
+                raise web.HTTPUnauthorized(reason='Authorization required')
 
             user_scopes = payload.get(permissions_property, [])
 

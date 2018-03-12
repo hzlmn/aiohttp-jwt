@@ -5,19 +5,21 @@ import sys
 
 import jwt
 
-from .exceptions import UnauthorizedError  # noqa
-
 try:
     import aiohttp
 except ImportError:
     sys.stdout.write("""
-        This middleware works ONLY with `aiohttp` package, so make sure you have installed it.
-    """)  # noqa
+        This middleware works ONLY with `aiohttp` package,
+        so make sure you have installed it.
+    """)
     sys.exit(1)
 
 logger = logging.getLogger(__name__)
 
 __config = dict()
+
+
+__ALL__ = ('JWTMiddleware',)
 
 
 def check_request(request, entries):
@@ -30,18 +32,18 @@ def check_request(request, entries):
 
 
 def JWTMiddleware(
-    secret,
-    *args,
+    secret_or_pub_key,
     request_property='payload',
     credentials_required=True,
     whitelist=tuple(),
     token_getter=None,
     store_token=False,
-    **kwargs,
+    algorithms=None,
 ):
-    if not (secret and isinstance(secret, str)):
+    if not (secret_or_pub_key and isinstance(secret_or_pub_key, str)):
         raise ValueError(
-            'secret should be provided for correct work of JWT middleware')
+            'secret or public key should be provided for correct work',
+        )
 
     if not isinstance(request_property, str):
         raise TypeError('request_property should be a str')
@@ -66,27 +68,32 @@ def JWTMiddleware(
                         if credentials_required and not re.match(r'Bearer', scheme):  # noqa
                             raise aiohttp.web.HTTPForbidden
 
-                    except Exception as error:
+                    except BaseException as error:
                         raise aiohttp.web.HTTPForbidden(
                             reason='Invalid authorization header',
                         )
 
                 if not token and credentials_required:
-                    raise aiohttp.web.HTTPForbidden(
+                    raise aiohttp.web.HTTPUnauthorized(
                         reason='Missing authorization token',
                     )
-                elif token:
+
+                if token is not None:
                     try:
                         if not isinstance(token, bytes):
                             token = token.encode()
-                        decoded = jwt.decode(token, secret, *args, **kwargs)
+                        decoded = jwt.decode(
+                            token,
+                            secret_or_pub_key,
+                            algorithms=algorithms,
+                        )
                         request[request_property] = decoded
                         if store_token and isinstance(store_token, str):
                             request[store_token] = token
                     except jwt.InvalidTokenError as exc:
                         logger.exception(exc, exc_info=exc)
                         raise aiohttp.web.HTTPForbidden(
-                            reason='Invalid token',
+                            reason='Invalid authorization token',
                         )
 
             return await handler(request)
