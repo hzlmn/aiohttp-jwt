@@ -1,3 +1,4 @@
+import collections
 import logging
 
 from aiohttp import web
@@ -5,8 +6,6 @@ from aiohttp import web
 from .middleware import __config
 
 logger = logging.getLogger(__name__)
-
-# TODO: Add more scopes checking strategies
 
 
 def ONE_OF(required, provided):
@@ -40,6 +39,9 @@ def ensure_scopes(
                 raise web.HTTPForbidden(reason='Authorization required')
 
             user_scopes = payload.get(permissions_property, [])
+
+            if not isinstance(user_scopes, collections.Iterable):
+                raise web.HTTPForbidden(reason='Invalid permissions format')
 
             if not strategy(scopes, user_scopes):
                 raise web.HTTPForbidden(reason='Insufficient scopes')
