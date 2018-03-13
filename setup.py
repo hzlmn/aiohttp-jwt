@@ -26,6 +26,9 @@ def read(*parts):
 packages = ['aiohttp_jwt']
 
 
+install_requires = ['aiohttp>=2.3.5', 'PyJWT>=1.6.0']
+
+
 classifiers = ['Intended Audience :: Developers',
                'License :: OSI Approved :: MIT License',
                'Programming Language :: Python',
@@ -35,12 +38,13 @@ classifiers = ['Intended Audience :: Developers',
 setup(
     name='aiohttp_jwt',
     version=get_version(),
-    description='aiohttp JWT support',
+    description='aiohttp middleware for working with JWT',
     url='https://github.com/hzlmn/aiohttp-jwt',
     author='Oleh Kuchuk',
     author_email='kuchuklehjs@gmail.com',
     license='MIT',
     packages=packages,
+    install_requires=install_requires,
     zip_safe=False,
     classifiers=classifiers,
     keywords=[

@@ -18,8 +18,7 @@ logger = logging.getLogger(__name__)
 
 __config = dict()
 
-
-__ALL__ = ('JWTMiddleware',)
+__REQUEST_IDENT = 'request_property'
 
 
 def check_request(request, entries):
@@ -48,7 +47,7 @@ def JWTMiddleware(
     if not isinstance(request_property, str):
         raise TypeError('request_property should be a str')
 
-    __config['request_property'] = request_property
+    __config[__REQUEST_IDENT] = request_property
 
     async def factory(app, handler):
         async def middleware(request):

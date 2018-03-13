@@ -3,15 +3,9 @@ import logging
 
 from aiohttp import web
 
-from .middleware import __config
+from .middleware import __REQUEST_IDENT, __config
 
 logger = logging.getLogger(__name__)
-
-__ALL__ = (
-    'ONE_OF',
-    'ALL_IN',
-    'check_permissions',
-)
 
 
 def ONE_OF(required, provided):
@@ -23,6 +17,17 @@ def ONE_OF(required, provided):
 
 def ALL_IN(required, provided):
     return set(required).issubset(set(provided))
+
+
+def login_required(func):
+    async def wrapped(request):
+        request_property = __config[__REQUEST_IDENT]
+
+        if not request.get(request_property):
+            raise web.HTTPUnauthorized(reason='Authorizaton required')
+
+        return await func(request)
+    return wrapped
 
 
 def check_permissions(
@@ -38,7 +43,7 @@ def check_permissions(
 
     def scopes_checker(func):
         async def wrapped(request):
-            request_property = __config['request_property']
+            request_property = __config[__REQUEST_IDENT]
             payload = request.get(request_property)
 
             if not payload:

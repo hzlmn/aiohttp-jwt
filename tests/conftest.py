@@ -1,7 +1,10 @@
 import jwt
 import pytest
 
-from aiohttp_jwt import JWTMiddleware
+
+@pytest.fixture
+def fake_payload():
+    return {'foo': 'bar'}
 
 
 @pytest.fixture
@@ -10,22 +13,5 @@ def secret():
 
 
 @pytest.fixture
-def token(secret):
-    return jwt.encode({'foo': 'bar'}, secret)
-
-
-@pytest.fixture
-def request():
-    pass
-
-
-@pytest.fixture
-def response():
-    pass
-
-
-@pytest.fixture
-def middleware():
-    def _middleware(*args, **kwargs):
-        return JWTMiddleware(*args, **kwargs)
-    return _middleware
+def token(fake_payload, secret):
+    return jwt.encode(fake_payload, secret)
