@@ -20,13 +20,15 @@ def ALL_IN(required, provided):
 
 
 def login_required(func):
-    async def wrapped(request):
+    async def wrapped(*args, **kwargs):
+        request = args[-1]
+        assert isinstance(request, web.Request)
         request_property = __config[__REQUEST_IDENT]
 
         if not request.get(request_property):
-            raise web.HTTPUnauthorized(reason='Authorizaton required')
+            raise web.HTTPUnauthorized(reason='Authorization required')
 
-        return await func(request)
+        return await func(*args, **kwargs)
     return wrapped
 
 
@@ -42,7 +44,9 @@ def check_permissions(
         scopes = scopes.split(' ')
 
     def scopes_checker(func):
-        async def wrapped(request):
+        async def wrapped(*args, **kwargs):
+            request = args[-1]
+            assert isinstance(request, web.Request)
             request_property = __config[__REQUEST_IDENT]
             payload = request.get(request_property)
 
@@ -57,7 +61,7 @@ def check_permissions(
             if not strategy(scopes, user_scopes):
                 raise web.HTTPForbidden(reason='Insufficient scopes')
 
-            return await func(request)
+            return await func(*args, **kwargs)
         return wrapped
 
     return scopes_checker
