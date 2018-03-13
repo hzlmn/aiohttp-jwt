@@ -9,3 +9,23 @@
   * MIT License
   * Latest docs [TBD]()
   * Contributions are highly welcome!
+
+
+#### Requirements
+ - `aiohttp >= 2.3.5`
+ - `PyJWT`
+
+
+### Install
+
+> $ pip install aiohttp_jwt
+
+
+### Usage
+
+TBD
+
+
+
+### License
+MIT License

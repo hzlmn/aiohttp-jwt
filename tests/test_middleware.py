@@ -5,29 +5,6 @@ from aiohttp import web
 from aiohttp_jwt import JWTMiddleware
 
 
-@pytest.fixture
-def create_app(secret):
-    def factory(routes, *args, **kwargs):
-        defaults = {'secret_or_pub_key': secret}
-        app = web.Application(
-            middlewares=[
-                JWTMiddleware(
-                    *args,
-                    **{
-                        **defaults,
-                        **kwargs
-                    },
-                ),
-            ],
-        )
-
-        for path, handler in routes:
-            app.router.add_get(path, handler)
-
-        return app
-    return factory
-
-
 def test_throw_on_invalid_secret():
     with pytest.raises(ValueError):
         JWTMiddleware(secret_or_pub_key='')
