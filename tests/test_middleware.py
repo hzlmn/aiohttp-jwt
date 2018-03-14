@@ -6,7 +6,7 @@ from aiohttp_jwt import JWTMiddleware
 
 
 def test_throw_on_invalid_secret():
-    with pytest.raises(ValueError):
+    with pytest.raises(RuntimeError):
         JWTMiddleware(secret_or_pub_key='')
 
 
@@ -108,3 +108,33 @@ async def test_storing_token(create_app, aiohttp_client, fake_payload, token):
     })
     assert response.status == 200
     assert (await response.json()) == {}
+
+
+async def get_token_coro(request):
+    return request.query.get('auth_token')
+
+
+def get_token(request):
+    return request.query.get('auth_token')
+
+
+@pytest.mark.parametrize('getter', [
+    get_token_coro,
+    get_token
+])
+async def test_token_getter(
+        getter, create_app, aiohttp_client, fake_payload, token):
+    async def handler(request):
+        assert request.get('payload') == fake_payload
+        return web.json_response({'status': 'ok'})
+    routes = (('/foo', handler),)
+    client = await aiohttp_client(
+        create_app(
+            routes,
+            token_getter=getter,
+        ),
+    )
+    response = await client.get('/foo', params={
+        'auth_token': token.decode('utf-8'),
+    })
+    assert response.status == 200
