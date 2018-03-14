@@ -11,32 +11,31 @@
   * Contributions are highly welcome!
 
 
-#### Requirements
+## Requirements
  - [Aiohttp >= 2.3.5](https://github.com/aio-libs/aiohttp)
  - [PyJWT](https://github.com/jpadilla/pyjwt)
 
 
-### Credentials
-
-This module inspired by official [auth0/express-jwt]() middleware and
-[express-jwt-permissions]() extension.
-
-
-### Install
+## Install
 ```bash
 $ pip install aiohttp_jwt
 ```
 
 
-### Usage
-- [Basic Example]()
-- [Permissions control]()
+## Usage
+- [Basic Example](/example/basic.py)
+- [Permissions control](/example/permissions.py)
 
 
-# Related packages
-  For advanced security facilities check [aio-libs/aiohttp_security]()
+
+## Credentials
+
+This module inspired by official [auth0/express-jwt](https://github.com/auth0/express-jwt) middleware and
+[express-jwt-permissions](https://github.com/MichielDeMey/express-jwt-permissions) extension.
 
 
+## Related packages
+  For advanced security facilities check [aio-libs/aiohttp_security](https://github.com/aio-libs/aiohttp-security)
 
 ### License
 MIT License
