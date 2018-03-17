@@ -1,18 +1,9 @@
 import asyncio
 import logging
 import re
-import sys
 
+import aiohttp
 import jwt
-
-try:
-    import aiohttp
-except ImportError:
-    sys.stdout.write("""
-        This middleware works ONLY with `aiohttp` package,
-        so make sure you have installed it.
-    """)
-    sys.exit(1)
 
 logger = logging.getLogger(__name__)
 
