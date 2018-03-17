@@ -4,9 +4,7 @@ import jwt
 from aiohttp import web
 from aiohttp.web import json_response
 
-from aiohttp_jwt import JWTMiddleware, check_permissions
-from aiohttp_jwt.decorators import ONE_OF
-from aiohttp_jwt.permissions import check_permissions
+from aiohttp_jwt import JWTMiddleware, check_permissions, match_any
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +19,7 @@ async def foo_handler(request):
 @check_permissions([
     'user:admin',
     'olehkuchuk',
-], strategy=ONE_OF)
+], comparison=match_any)
 async def protected_handler(request):
     payload = request.get('user', {})
     return json_response({

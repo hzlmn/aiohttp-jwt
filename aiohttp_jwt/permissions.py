@@ -8,14 +8,11 @@ from .middleware import __REQUEST_IDENT, __config
 logger = logging.getLogger(__name__)
 
 
-def ONE_OF(required, provided):
-    for scope in provided:
-        if scope in required:
-            return True
-    return False
+def match_any(required, provided):
+    return any([scope in provided for scope in required])
 
 
-def ALL_IN(required, provided):
+def match_all(required, provided):
     return set(required).issubset(set(provided))
 
 
@@ -35,10 +32,10 @@ def login_required(func):
 def check_permissions(
     scopes,
     permissions_property='scopes',
-    strategy=ALL_IN,
+    comparison=match_all,
 ):
-    if not callable(strategy):
-        raise TypeError('strategy should be a func')
+    if not callable(comparison):
+        raise TypeError('comparison should be a func')
 
     if isinstance(scopes, str):
         scopes = scopes.split(' ')
@@ -58,7 +55,7 @@ def check_permissions(
             if not isinstance(user_scopes, collections.Iterable):
                 raise web.HTTPForbidden(reason='Invalid permissions format')
 
-            if not strategy(scopes, user_scopes):
+            if not comparison(scopes, user_scopes):
                 raise web.HTTPForbidden(reason='Insufficient scopes')
 
             return await func(*args, **kwargs)

@@ -22,7 +22,7 @@ async def test_get_payload(create_app, aiohttp_client, fake_payload, token):
     assert response.status == 200
 
 
-async def test_unauthorized_on_missing_token(
+async def test_throw_on_missing_token(
         create_app, aiohttp_client, fake_payload, token):
     async def handler(request):
         return web.json_response({})
@@ -31,6 +31,32 @@ async def test_unauthorized_on_missing_token(
     response = await client.get('/foo')
     assert response.status == 401
     assert 'Missing authorization' in response.reason
+
+
+async def test_throw_on_wrong_token_scheme(
+        create_app, aiohttp_client, fake_payload, token):
+    async def handler(request):
+        return web.json_response({})
+    routes = (('/foo', handler),)
+    client = await aiohttp_client(create_app(routes))
+    response = await client.get('/foo', headers={
+        'Authorization': 'Wrong {}'.format(token.decode('utf-8')),
+    })
+    assert response.status == 403
+    assert 'Invalid token scheme' in response.reason
+
+
+async def test_throw_on_wrong_header_format(
+        create_app, aiohttp_client, fake_payload, token):
+    async def handler(request):
+        return web.json_response({})
+    routes = (('/foo', handler),)
+    client = await aiohttp_client(create_app(routes))
+    response = await client.get('/foo', headers={
+        'Authorization': 'Failed',
+    })
+    assert response.status == 403
+    assert 'Invalid authorization header' in response.reason
 
 
 async def test_forbidden_on_wrong_secret(
@@ -44,7 +70,7 @@ async def test_forbidden_on_wrong_secret(
         'Authorization': 'Bearer {}'.format(token),
     })
     assert response.status == 403
-    assert 'Invalid authorization' in response.reason
+    assert 'Invalid authorization token' in response.reason
 
 
 async def test_credentials_not_required(
@@ -70,7 +96,7 @@ async def test_whitelisted_path(create_app, aiohttp_client, fake_payload):
     assert response.status == 200
 
 
-async def test_custom_request_property(
+async def test_request_property(
         create_app, aiohttp_client, fake_payload, token):
     request_property = 'custom'
 
@@ -89,7 +115,11 @@ async def test_custom_request_property(
         'Authorization': 'Bearer {}'.format(token.decode('utf-8')),
     })
     assert response.status == 200
-    assert (await response.json()) == {}
+
+
+async def test_request_property_invalid_type(create_app):
+    with pytest.raises(TypeError):
+        create_app([], request_property={})
 
 
 async def test_storing_token(create_app, aiohttp_client, fake_payload, token):

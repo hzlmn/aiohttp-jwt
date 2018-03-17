@@ -1,9 +1,8 @@
 import jwt
+import pytest
 from aiohttp import web
 
-from aiohttp_jwt import ONE_OF, check_permissions, login_required
-
-# TODO: Refactor to parametrized test
+from aiohttp_jwt import check_permissions, login_required, match_any
 
 
 async def test_login_required(create_app, aiohttp_client):
@@ -83,14 +82,14 @@ async def test_insufficient_scopes(
     assert 'Insufficient' in response.reason
 
 
-async def test_scopes_strategies_one_of(
+async def test_scopes_strategies_match_any(
         create_app, fake_payload, aiohttp_client, secret):
     token = jwt.encode({**fake_payload, 'scopes': ['admin']}, secret)
 
     @check_permissions([
         'view',
         'admin',
-    ], strategy=ONE_OF)
+    ], comparison=match_any)
     async def handler(request):
         return web.json_response({})
     routes = (('/foo', handler),)
@@ -102,7 +101,7 @@ async def test_scopes_strategies_one_of(
     assert response.status == 200
 
 
-async def test_check_permission_scopes_string(
+async def test_check_permissions_scopes_string(
         create_app, fake_payload, aiohttp_client, secret):
     token = jwt.encode({**fake_payload, 'scopes': ['view', 'admin']}, secret)
 
@@ -116,3 +115,9 @@ async def test_check_permission_scopes_string(
         'Authorization': 'Bearer {}'.format(token.decode('utf-8'))
     })
     assert response.status == 200
+
+
+@pytest.mark.parametrize('comparison', [None, 'foo', {}, []])
+async def test_check_permissions_wrong_comparison(comparison):
+    with pytest.raises(TypeError):
+        check_permissions(['foo'], comparison=comparison)
