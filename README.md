@@ -1,10 +1,13 @@
 ## aiohttp-jwt 
+[![stability-unstable](https://img.shields.io/badge/stability-unstable-yellow.svg)](https://img.shields.io/badge/stability-unstable-yellow.svg)
 [![Updates](https://pyup.io/repos/github/hzlmn/aiohttp-jwt/shield.svg)](https://pyup.io/repos/github/hzlmn/aiohttp-jwt/)
 [![Python 3](https://pyup.io/repos/github/hzlmn/aiohttp-jwt/python-3-shield.svg)](https://pyup.io/repos/github/hzlmn/aiohttp-jwt/)
 [![Build Status](https://travis-ci.org/hzlmn/aiohttp-jwt.svg?branch=master)](https://travis-ci.org/hzlmn/aiohttp-jwt)
 [![codecov](https://codecov.io/gh/hzlmn/aiohttp-jwt/branch/master/graph/badge.svg)](https://codecov.io/gh/hzlmn/aiohttp-jwt)
 
-> The library provides `aiohttp` middleware and helper utils for working with JSON web tokens.
+> The API is in the process of settling, but has not yet had sufficient real-world testing to be considered stable. Backwards-compatibility will be maintained if reasonable.
+
+The library provides `aiohttp` middleware and helper utils for working with JSON web tokens.
 
   * Works on Python3.5+
   * MIT License
