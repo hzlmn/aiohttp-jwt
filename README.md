@@ -25,8 +25,62 @@ The library provides `aiohttp` middleware and helper utils for working with JSON
 $ pip install aiohttp_jwt
 ```
 
+## Simple Usage
+`server.py`
+```python
+import jwt
+from aiohttp import web
 
-## Usage
+from aiohttp_jwt import JWTMiddleware
+
+sharable_secret = 'secret'
+
+
+async def protected_handler(request):
+    return web.json_response({'user': request['payload']})
+
+
+app = web.Application(
+    middlewares=[
+        JWTMiddleware(sharable_secret),
+    ]
+)
+
+app.router.add_get('/protected', protected_handler)
+
+if __name__ == '__main__':
+    web.run_app(app)
+
+```
+
+`client.py`
+```python
+import asyncio
+
+import aiohttp
+import async_timeout
+
+
+async def fetch(session, url, headers=None):
+    async with async_timeout.timeout(10):
+        async with session.get(url, headers=headers) as response:
+            return await response.json()
+
+
+async def main():
+    async with aiohttp.ClientSession() as session:
+        response = await fetch(
+            session,
+            'http://localhost:8080/protected',
+            headers={'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InRlc3QifQ.pyNsXX_vNsUvdt6xu13F1Gs1zGELT4Va8a38eG5svBA'})
+        print(response)
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
+
+```
+
+## Examples
 - [Basic Example](/example/basic.py)
 - [Permissions control](/example/permissions.py)
 
