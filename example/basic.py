@@ -1,32 +1,33 @@
 import jwt
 from aiohttp import web
 
-from aiohttp_jwt import ONE_OF, JWTMiddleware, check_permissions
+from aiohttp_jwt import JWTMiddleware
+
+sharable_secret = 'secret'
 
 
 async def public_handler(request):
-    return web.json_response({'status': 'ok'})
+    return web.json_response({'username': 'anonymous'})
 
 
 async def protected_handler(request):
-    return web.json_response({'status': 'ok'})
+    return web.json_response({
+        'username': request['user'].get('username', 'anonymous'),
+    })
 
 
 async def get_token(request):
     return jwt.encode({
         'username': 'olehkuchuk',
-        'scopes': [
-            'user:admin',
-        ]
-    }, 'secret')
+    }, sharable_secret)
 
 
 app = web.Application(
     middlewares=[
         JWTMiddleware(
-            secret_or_pub_key='secret',
+            secret_or_pub_key=sharable_secret,
             token_getter=get_token,
-            credentials_required=True,
+            request_property='user',
             whitelist=[
                 r'/public*'
             ]
