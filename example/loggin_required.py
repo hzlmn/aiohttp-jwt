@@ -14,7 +14,7 @@ async def public_handler(request):
 
 
 @login_required
-async def protected_handler(request):
+async def auth_required_handler(request):
     return web.json_response({
         'username': request['user'],
     })
@@ -31,7 +31,7 @@ app = web.Application(
 
 
 app.router.add_get('/public', public_handler)
-app.router.add_get('/protected', protected_handler)
+app.router.add_get('/protected', auth_required_handler)
 
 if __name__ == '__main__':
     web.run_app(app)
