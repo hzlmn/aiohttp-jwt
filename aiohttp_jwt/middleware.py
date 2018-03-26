@@ -59,10 +59,13 @@ def JWTMiddleware(
                             reason='Invalid authorization header'
                         )
 
-                    if credentials_required and not re.match('Bearer', scheme):
-                        raise aiohttp.web.HTTPForbidden(
-                            reason='Invalid token scheme',
-                        )
+                    if not re.match('Bearer', scheme):
+                        if credentials_required:
+                            raise aiohttp.web.HTTPForbidden(
+                                reason='Invalid token scheme',
+                            )
+                        else:
+                            token = None
 
                 if not token and credentials_required:
                     raise aiohttp.web.HTTPUnauthorized(
