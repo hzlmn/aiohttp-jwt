@@ -1,9 +1,11 @@
-import asyncio
 import logging
 import re
+from functools import partial
 
 import aiohttp
 import jwt
+
+from .utils import check_request, invoke
 
 logger = logging.getLogger(__name__)
 
@@ -12,21 +14,13 @@ __config = dict()
 __REQUEST_IDENT = 'request_property'
 
 
-def check_request(request, entries):
-    """Check if request.path match group of certain patterns."""
-    for pattern in entries:
-        if re.match(pattern, request.path):
-            return True
-
-    return False
-
-
 def JWTMiddleware(
     secret_or_pub_key,
     request_property='payload',
     credentials_required=True,
     whitelist=tuple(),
     token_getter=None,
+    is_revoked=None,
     store_token=False,
     algorithms=None,
 ):
@@ -46,9 +40,7 @@ def JWTMiddleware(
                 token = None
 
                 if callable(token_getter):
-                    token = token_getter(request)
-                    if asyncio.iscoroutine(token):
-                        token = await token
+                    token = await invoke(partial(token_getter, request))
                 elif 'Authorization' in request.headers:
                     try:
                         scheme, token = request.headers.get(
@@ -79,6 +71,17 @@ def JWTMiddleware(
                             algorithms=algorithms,
                         )
                         request[request_property] = decoded
+
+                        if callable(is_revoked):
+                            if await invoke(partial(
+                                is_revoked,
+                                request,
+                                decoded,
+                            )):
+                                raise aiohttp.web.HTTPForbidden(
+                                    reason='Token is revoked',
+                                )
+
                         if store_token and isinstance(store_token, str):
                             request[store_token] = token
                     except jwt.InvalidTokenError as exc:
