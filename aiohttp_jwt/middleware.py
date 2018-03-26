@@ -62,33 +62,35 @@ def JWTMiddleware(
                     )
 
                 if token is not None:
+                    if not isinstance(token, bytes):
+                        token = token.encode()
+
                     try:
-                        if not isinstance(token, bytes):
-                            token = token.encode()
                         decoded = jwt.decode(
                             token,
                             secret_or_pub_key,
                             algorithms=algorithms,
                         )
-                        request[request_property] = decoded
-
-                        if callable(is_revoked):
-                            if await invoke(partial(
-                                is_revoked,
-                                request,
-                                decoded,
-                            )):
-                                raise aiohttp.web.HTTPForbidden(
-                                    reason='Token is revoked',
-                                )
-
-                        if store_token and isinstance(store_token, str):
-                            request[store_token] = token
                     except jwt.InvalidTokenError as exc:
                         logger.exception(exc, exc_info=exc)
                         raise aiohttp.web.HTTPForbidden(
                             reason='Invalid authorization token',
                         )
+
+                    request[request_property] = decoded
+
+                    if callable(is_revoked):
+                        if await invoke(partial(
+                            is_revoked,
+                            request,
+                            decoded,
+                        )):
+                            raise aiohttp.web.HTTPForbidden(
+                                reason='Token is revoked',
+                            )
+
+                    if store_token and isinstance(store_token, str):
+                        request[store_token] = token
 
             return await handler(request)
         return middleware
