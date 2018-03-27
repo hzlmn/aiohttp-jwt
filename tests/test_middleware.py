@@ -168,3 +168,28 @@ async def test_token_getter(
         'auth_token': token.decode('utf-8'),
     })
     assert response.status == 200
+
+
+def is_revoked(request, payload):
+    return True
+
+
+async def is_revoked_coro(request, payload):
+    return True
+
+
+@pytest.mark.parametrize('check', [
+    is_revoked,
+    is_revoked_coro,
+])
+async def test_token_revoked(
+        check, create_app, aiohttp_client, fake_payload, token):
+    async def handler(request):
+        return web.json_response({})
+    routes = (('/foo', handler),)
+    client = await aiohttp_client(create_app(routes, is_revoked=check))
+    response = await client.get('/foo', headers={
+        'Authorization': 'Bearer {}'.format(token.decode('utf-8')),
+    })
+    assert response.status == 403
+    assert 'Token is revoked' in response.reason
