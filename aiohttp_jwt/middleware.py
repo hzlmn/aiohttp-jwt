@@ -77,8 +77,6 @@ def JWTMiddleware(
                             reason='Invalid authorization token',
                         )
 
-                    request[request_property] = decoded
-
                     if callable(is_revoked):
                         if await invoke(partial(
                             is_revoked,
@@ -88,6 +86,8 @@ def JWTMiddleware(
                             raise aiohttp.web.HTTPForbidden(
                                 reason='Token is revoked',
                             )
+
+                    request[request_property] = decoded
 
                     if store_token and isinstance(store_token, str):
                         request[store_token] = token
