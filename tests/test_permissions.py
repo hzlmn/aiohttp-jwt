@@ -121,3 +121,39 @@ async def test_check_permissions_scopes_string(
 async def test_check_permissions_wrong_comparison(comparison):
     with pytest.raises(TypeError):
         check_permissions(['foo'], comparison=comparison)
+
+
+async def test_login_required_with_wrong_auth_scheme(
+        create_app, fake_payload, aiohttp_client, secret):
+    token = jwt.encode({**fake_payload}, secret)
+
+    @login_required
+    async def handler(self, request):
+        return web.json_response({'status': 'ok'})
+
+    routes = (('/foo', handler),)
+    client = await aiohttp_client(
+        create_app(routes, credentials_required=False))
+    response = await client.get('/foo', headers={
+        'Authorization': 'InvalidScheme {}'.format(token.decode('utf-8'))
+    })
+    assert response.status == 401
+    assert 'Authorization required' in response.reason
+
+
+async def test_check_permissions_with_wrong_auth_scheme(
+        create_app, fake_payload, aiohttp_client, secret):
+    token = jwt.encode({**fake_payload, 'scopes': ['view']}, secret)
+
+    @check_permissions(['view'])
+    async def handler(self, request):
+        return web.json_response({'status': 'ok'})
+
+    routes = (('/foo', handler),)
+    client = await aiohttp_client(
+        create_app(routes, credentials_required=False))
+    response = await client.get('/foo', headers={
+        'Authorization': 'InvalidScheme {}'.format(token.decode('utf-8'))
+    })
+    assert response.status == 401
+    assert 'Authorization required' in response.reason

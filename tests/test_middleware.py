@@ -73,16 +73,43 @@ async def test_forbidden_on_wrong_secret(
     assert 'Invalid authorization token' in response.reason
 
 
+def form_auth(scheme, correct):
+    if not scheme:
+        return {}
+    scheme = scheme + " {}"
+    if correct:
+        auth = scheme.format(
+            jwt.encode({'foo': 'bar'}, 'secret').decode('utf-8')
+        )
+    else:
+        auth = scheme.format("Invalidtoken")
+    return {"Authorization": auth}
+
+
+@pytest.mark.parametrize(
+    "schema, correct_token, req_property_exists, resp_status", [
+        ("Bearer", True, True, 200),
+        ("Invalid_scheme", True, False, 200),
+        ("Invalid_scheme", False, False, 200),
+        ("Bearer", False, False, 403),
+        ("", False, False, 200),
+    ]
+)
 async def test_credentials_not_required(
-        create_app, aiohttp_client, fake_payload):
+        schema, correct_token, req_property_exists, resp_status,
+        create_app, aiohttp_client, fake_payload,
+        ):
     async def handler(request):
+        assert bool(request.get("payload")) == req_property_exists
         return web.json_response({})
     routes = (('/foo', handler),)
     client = await aiohttp_client(
         create_app(routes, credentials_required=False),
     )
-    response = await client.get('/foo')
-    assert response.status == 200
+
+    auth_header = form_auth(schema, correct_token)
+    response = await client.get('/foo', headers=auth_header)
+    assert response.status == resp_status
 
 
 async def test_whitelisted_path(create_app, aiohttp_client, fake_payload):
