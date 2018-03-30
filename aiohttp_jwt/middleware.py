@@ -65,7 +65,7 @@ def JWTMiddleware(
                                 reason='Invalid token scheme',
                             )
                         else:
-                            token = None
+                            return await handler(request)
 
                 if not token and credentials_required:
                     raise aiohttp.web.HTTPUnauthorized(
