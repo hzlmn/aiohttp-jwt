@@ -2,8 +2,8 @@ import logging
 import re
 from functools import partial
 
-import aiohttp
 import jwt
+from aiohttp import web
 
 from .utils import check_request, invoke
 
@@ -36,63 +36,62 @@ def JWTMiddleware(
 
     async def factory(app, handler):
         async def middleware(request):
-            if not check_request(request, whitelist):
-                token = None
+            if check_request(request, whitelist):
+                return await handler(request)
 
-                if callable(token_getter):
-                    token = await invoke(partial(token_getter, request))
-                elif 'Authorization' in request.headers:
-                    try:
-                        scheme, token = request.headers.get(
-                            'Authorization'
-                        ).strip().split(' ')
-                    except ValueError:
-                        raise aiohttp.web.HTTPForbidden(
-                            reason='Invalid authorization header'
-                        )
+            token = None
 
-                    if not re.match('Bearer', scheme):
-                        if credentials_required:
-                            raise aiohttp.web.HTTPForbidden(
-                                reason='Invalid token scheme',
-                            )
-                        else:
-                            return await handler(request)
-
-                if not token and credentials_required:
-                    raise aiohttp.web.HTTPUnauthorized(
-                        reason='Missing authorization token',
+            if callable(token_getter):
+                token = await invoke(partial(token_getter, request))
+            elif 'Authorization' in request.headers:
+                try:
+                    scheme, token = request.headers.get(
+                        'Authorization'
+                    ).strip().split(' ')
+                except ValueError:
+                    raise web.HTTPForbidden(
+                        reason='Invalid authorization header',
                     )
 
-                if token is not None:
-                    if not isinstance(token, bytes):
-                        token = token.encode()
-
-                    try:
-                        decoded = jwt.decode(
-                            token,
-                            secret_or_pub_key,
-                            algorithms=algorithms,
+                if not re.match('Bearer', scheme):
+                    if credentials_required:
+                        raise web.HTTPForbidden(
+                            reason='Invalid token scheme',
                         )
-                    except jwt.InvalidTokenError as exc:
-                        logger.exception(exc, exc_info=exc)
-                        msg = 'Invalid authorization token, ' + str(exc)
-                        raise aiohttp.web.HTTPForbidden(reason=msg)
+                    return await handler(request)
 
-                    if callable(is_revoked):
-                        if await invoke(partial(
-                            is_revoked,
-                            request,
-                            decoded,
-                        )):
-                            raise aiohttp.web.HTTPForbidden(
-                                reason='Token is revoked',
-                            )
+            if not token and credentials_required:
+                raise web.HTTPUnauthorized(
+                    reason='Missing authorization token',
+                )
 
-                    request[request_property] = decoded
+            if token is not None:
+                if not isinstance(token, bytes):
+                    token = token.encode()
 
-                    if store_token and isinstance(store_token, str):
-                        request[store_token] = token
+                try:
+                    decoded = jwt.decode(
+                        token,
+                        secret_or_pub_key,
+                        algorithms=algorithms,
+                    )
+                except jwt.InvalidTokenError as exc:
+                    logger.exception(exc, exc_info=exc)
+                    msg = 'Invalid authorization token, ' + str(exc)
+                    raise web.HTTPForbidden(reason=msg)
+
+                if callable(is_revoked):
+                    if await invoke(partial(
+                        is_revoked,
+                        request,
+                        decoded,
+                    )):
+                        raise web.HTTPForbidden(reason='Token is revoked')
+
+                request[request_property] = decoded
+
+                if store_token and isinstance(store_token, str):
+                    request[store_token] = token
 
             return await handler(request)
         return middleware
