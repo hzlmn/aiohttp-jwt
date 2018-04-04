@@ -1,3 +1,11 @@
+
+- [0.1.1]
+
+  *Fixes*
+
+  * Fixed issue with non bearer token scheme https://github.com/hzlmn/aiohttp-jwt/issues/14 .Thanks @vikitikitavi
+
+
 - [0.1.0]
 
   *Additions*
