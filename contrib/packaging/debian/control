@@ -1,0 +1,29 @@
+Source: aiohttp-jwt
+Section: python
+Priority: optional
+Maintainer: Adam Cecile <acecile@le-vert.net>
+Build-Depends: debhelper (>= 9), dh-python, python3-all, python3-setuptools,
+ python3-sphinx,
+Standards-Version: 3.9.8
+Homepage: https://github.com/hzlmn/aiohttp-jwt
+X-Python3-Version: >= 3.5
+
+Package: python3-aiohttp-jwt
+Architecture: all
+Depends: ${python3:Depends}, ${misc:Depends},
+Suggests: python3-aiohttp-jwt-doc
+Description: aiohttp utils for working with JWT tokens (Python 3)
+ The library provides aiohttp middleware and helper utils for working with
+ JSON web tokens.
+ .
+ This package installs the library for Python 3.
+
+Package: python3-aiohttp-jwt-doc
+Architecture: all
+Section: doc
+Depends: ${misc:Depends}, ${sphinxdoc:Depends},
+Description: aiohttp utils for working with JWT tokens (documentation)
+ The library provides aiohttp middleware and helper utils for working with
+ JSON web tokens.
+ .
+ This package installs the Sphinx HTML documentation and manpage.

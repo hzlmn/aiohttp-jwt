@@ -1,0 +1,23 @@
+Description: Load aiohttp pytest plugin
+ .
+ aiohttp-jwt (0.1.1-1) unstable; urgency=medium
+ .
+   * Initial release.
+Author: Adam Cecile <acecile@le-vert.net>
+
+---
+Origin: other
+Bug: https://github.com/hzlmn/aiohttp-jwt/issues/26
+Forwarded: https://github.com/hzlmn/aiohttp-jwt/issues/26
+Last-Update: 2018-04-11
+
+--- aiohttp-jwt-0.1.1.orig/tests/conftest.py
++++ aiohttp-jwt-0.1.1/tests/conftest.py
+@@ -4,6 +4,7 @@ from aiohttp import web
+ 
+ from aiohttp_jwt import JWTMiddleware
+ 
++pytest_plugins = 'aiohttp.pytest_plugin'
+ 
+ @pytest.fixture
+ def aiohttp_client(test_client):
