@@ -6,6 +6,11 @@ from aiohttp_jwt import JWTMiddleware
 
 
 @pytest.fixture
+def aiohttp_client(test_client):
+    return test_client
+
+
+@pytest.fixture
 def fake_payload():
     return {'foo': 'bar'}
 
