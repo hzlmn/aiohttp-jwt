@@ -4,6 +4,8 @@ from aiohttp import web
 
 from aiohttp_jwt import JWTMiddleware
 
+pytest_plugins = 'aiohttp.pytest_plugin'
+
 
 @pytest.fixture
 def fake_payload():
