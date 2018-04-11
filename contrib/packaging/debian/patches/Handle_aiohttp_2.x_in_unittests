@@ -1,0 +1,32 @@
+Description: Handle_aiohttp_2.x_in_unittests
+ .
+ aiohttp-jwt (0.1.1-1) unstable; urgency=medium
+ .
+   * Initial release.
+Author: Adam Cecile <acecile@le-vert.net>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: upstream, https://github.com/hzlmn/aiohttp-jwt/issues/26
+Bug: https://github.com/hzlmn/aiohttp-jwt/issues/26
+Forwarded: not-needed
+Reviewed-By: Kuchuk Oleh <kuchuklehjs@gmail.com> 
+Last-Update: 2018-04-11
+
+--- aiohttp-jwt-0.1.1.orig/tests/conftest.py
++++ aiohttp-jwt-0.1.1/tests/conftest.py
+@@ -6,6 +6,11 @@ from aiohttp_jwt import JWTMiddleware
+ 
+ 
+ @pytest.fixture
++def aiohttp_client(test_client):
++    return test_client
++
++
++@pytest.fixture
+ def fake_payload():
+     return {'foo': 'bar'}
+ 

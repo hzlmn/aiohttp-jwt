@@ -1,0 +1,5 @@
+aiohttp-jwt (0.1.1-1) unstable; urgency=medium
+
+  * Initial release.
+
+ -- Adam Cecile <acecile@le-vert.net>  Tue, 10 Apr 2018 14:05:35 +0200
