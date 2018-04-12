@@ -1,7 +1,6 @@
 import jwt
 import pytest
 from aiohttp import web
-
 from aiohttp_jwt import JWTMiddleware
 
 
@@ -98,7 +97,7 @@ def form_auth(scheme, correct):
 async def test_credentials_not_required(
         schema, correct_token, req_property_exists, resp_status,
         create_app, aiohttp_client, fake_payload,
-        ):
+):
     async def handler(request):
         assert bool(request.get("payload")) == req_property_exists
         return web.json_response({})
@@ -220,3 +219,11 @@ async def test_token_revoked(
     })
     assert response.status == 403
     assert 'Token is revoked' in response.reason
+
+
+async def test_bad_provider(create_app):
+    class FakeProvider:
+        pass
+
+    with pytest.raises(TypeError):
+        create_app([], provider=FakeProvider())

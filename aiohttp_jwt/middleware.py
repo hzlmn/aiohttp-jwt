@@ -2,9 +2,9 @@ import logging
 import re
 from functools import partial
 
-import jwt
 from aiohttp import web
 
+from .abc import AbstractJWTProvider, JWTDecodingError, PyJWTProvider
 from .utils import check_request, invoke
 
 logger = logging.getLogger(__name__)
@@ -16,6 +16,7 @@ __REQUEST_IDENT = 'request_property'
 
 def JWTMiddleware(
     secret_or_pub_key,
+    provider=PyJWTProvider(),
     request_property='payload',
     credentials_required=True,
     whitelist=tuple(),
@@ -24,6 +25,9 @@ def JWTMiddleware(
     store_token=False,
     algorithms=None,
 ):
+    if not isinstance(provider, AbstractJWTProvider):
+        raise TypeError('provider should be instance of AbstactJWTProvider')
+
     if not (secret_or_pub_key and isinstance(secret_or_pub_key, str)):
         raise RuntimeError(
             'secret or public key should be provided for correct work',
@@ -70,12 +74,12 @@ def JWTMiddleware(
                     token = token.encode()
 
                 try:
-                    decoded = jwt.decode(
+                    decoded = provider.decode(
                         token,
                         secret_or_pub_key,
                         algorithms=algorithms,
                     )
-                except jwt.InvalidTokenError as exc:
+                except JWTDecodingError as exc:
                     logger.exception(exc, exc_info=exc)
                     msg = 'Invalid authorization token, ' + str(exc)
                     raise web.HTTPForbidden(reason=msg)

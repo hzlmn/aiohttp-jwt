@@ -106,3 +106,4 @@ venv.bak/
 sample/
 .vscode/
 .pytest_cache/
+.DS_Store
