@@ -11,8 +11,6 @@ logger = logging.getLogger(__name__)
 
 __config = dict()
 
-__REQUEST_IDENT = 'request_property'
-
 
 def JWTMiddleware(
     secret_or_pub_key,
@@ -36,7 +34,7 @@ def JWTMiddleware(
     if not isinstance(request_property, str):
         raise TypeError('request_property should be a str')
 
-    __config[__REQUEST_IDENT] = request_property
+    __config['identity'] = request_property
 
     async def factory(app, handler):
         async def middleware(request):
@@ -46,7 +44,10 @@ def JWTMiddleware(
             token = None
 
             if callable(token_getter):
-                token = await invoke(partial(token_getter, request))
+                token = await invoke(partial(
+                    token_getter,
+                    request,
+                ))
             elif 'Authorization' in request.headers:
                 try:
                     scheme, token = request.headers.get(

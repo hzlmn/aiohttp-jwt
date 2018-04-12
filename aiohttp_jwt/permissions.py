@@ -3,7 +3,7 @@ import logging
 
 from aiohttp import web
 
-from .middleware import __REQUEST_IDENT, __config
+from .middleware import __config
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ def login_required(func):
     async def wrapped(*args, **kwargs):
         request = args[-1]
         assert isinstance(request, web.Request)
-        request_property = __config[__REQUEST_IDENT]
+        request_property = __config['identity']
 
         if not request.get(request_property):
             raise web.HTTPUnauthorized(reason='Authorization required')
@@ -44,7 +44,7 @@ def check_permissions(
         async def wrapped(*args, **kwargs):
             request = args[-1]
             assert isinstance(request, web.Request)
-            request_property = __config[__REQUEST_IDENT]
+            request_property = __config['identity']
             payload = request.get(request_property)
 
             if not payload:
