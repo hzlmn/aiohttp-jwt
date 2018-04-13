@@ -1,7 +1,8 @@
 import jwt
 import pytest
 from aiohttp import web
-from aiohttp_jwt import JWTMiddleware
+
+from aiohttp_jwt import AbstractJWTProvider, JWTDecodingError, JWTMiddleware
 
 
 def test_throw_on_invalid_secret():
@@ -227,3 +228,34 @@ async def test_bad_provider(create_app):
 
     with pytest.raises(TypeError):
         create_app([], provider=FakeProvider())
+
+
+async def test_provider(create_app, aiohttp_client, fake_payload, token):
+    from jose import jwt as jowt
+    from jose import JWTError
+
+    class PyJoseProvider(AbstractJWTProvider):
+        def decode(self, token, secret, algorithms):
+            try:
+                return jowt.decode(
+                    token,
+                    secret,
+                    algorithms,
+                )
+            except JWTError as exc:
+                raise JWTDecodingError() from exc
+
+    async def handler(request):
+        return web.json_response({})
+
+    routes = (('/foo', handler),)
+    client = await aiohttp_client(
+        create_app(
+            routes,
+            provider=PyJoseProvider(),
+        ),
+    )
+    response = await client.get('/foo', headers={
+        'Authorization': 'Bearer {}'.format(token.decode('utf-8')),
+    })
+    assert response.status == 200
