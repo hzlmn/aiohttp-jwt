@@ -48,6 +48,25 @@ async def test_check_permissions(
     assert response.status == 200
 
 
+async def test_check_permissions_invalid_format(
+        create_app, fake_payload, aiohttp_client, secret):
+    token = jwt.encode({**fake_payload, 'scopes': 'test'}, secret)
+
+    @check_permissions(['test'])
+    async def handler(request):
+        return web.json_response({})
+    routes = (('/foo', handler),)
+    client = await aiohttp_client(create_app(
+        routes,
+        credentials_required=False,
+    ))
+    response = await client.get('/foo', headers={
+        'Authorization': 'Bearer {}'.format(token.decode('utf-8'))
+    })
+    assert response.status == 403
+    assert 'Invalid permissions format' in response.reason
+
+
 async def test_check_permissions_class(
         create_app, fake_payload, aiohttp_client, secret):
     token = jwt.encode({**fake_payload, 'scopes': ['view']}, secret)
