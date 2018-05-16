@@ -1,28 +1,23 @@
 import collections
 import logging
+from functools import wraps
 
 from aiohttp import web
 
-from .middleware import __REQUEST_IDENT, __config
+from .middleware import _config
+from .utils import match_all
 
 logger = logging.getLogger(__name__)
 
 
-def match_any(required, provided):
-    return any([scope in provided for scope in required])
-
-
-def match_all(required, provided):
-    return set(required).issubset(set(provided))
-
-
 def login_required(func):
+    @wraps(func)
     async def wrapped(*args, **kwargs):
         request = args[-1]
-        assert isinstance(request, web.Request)
-        request_property = __config[__REQUEST_IDENT]
 
-        if not request.get(request_property):
+        assert isinstance(request, web.Request)
+
+        if not request.get(_config.request_property):
             raise web.HTTPUnauthorized(reason='Authorization required')
 
         return await func(*args, **kwargs)
@@ -41,11 +36,13 @@ def check_permissions(
         scopes = scopes.split(' ')
 
     def scopes_checker(func):
+        @wraps(func)
         async def wrapped(*args, **kwargs):
             request = args[-1]
+
             assert isinstance(request, web.Request)
-            request_property = __config[__REQUEST_IDENT]
-            payload = request.get(request_property)
+
+            payload = request.get(_config.request_property)
 
             if not payload:
                 raise web.HTTPUnauthorized(reason='Authorization required')

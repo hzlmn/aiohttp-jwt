@@ -5,13 +5,11 @@ from functools import partial
 import jwt
 from aiohttp import web
 
-from .utils import check_request, invoke
+from .utils import Q, invoke, match_patterns
 
 logger = logging.getLogger(__name__)
 
-__config = dict()
-
-__REQUEST_IDENT = 'request_property'
+_config = Q()
 
 
 def JWTMiddleware(
@@ -32,11 +30,11 @@ def JWTMiddleware(
     if not isinstance(request_property, str):
         raise TypeError('request_property should be a str')
 
-    __config[__REQUEST_IDENT] = request_property
+    _config.request_property = request_property
 
     async def factory(app, handler):
         async def middleware(request):
-            if check_request(request, whitelist):
+            if match_patterns(request.path, whitelist):
                 return await handler(request)
 
             token = None
