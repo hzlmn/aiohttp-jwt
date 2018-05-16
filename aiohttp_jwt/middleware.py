@@ -5,11 +5,11 @@ from functools import partial
 import jwt
 from aiohttp import web
 
-from .utils import Q, invoke, match_patterns
+from .utils import invoke, match_patterns
 
 logger = logging.getLogger(__name__)
 
-_config = Q()
+_config = dict()
 
 
 def JWTMiddleware(
@@ -30,7 +30,7 @@ def JWTMiddleware(
     if not isinstance(request_property, str):
         raise TypeError('request_property should be a str')
 
-    _config.request_property = request_property
+    _config['request_property'] = request_property
 
     async def factory(app, handler):
         async def middleware(request):

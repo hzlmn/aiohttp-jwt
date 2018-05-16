@@ -23,8 +23,3 @@ def match_any(required, provided):
 
 def match_all(required, provided):
     return set(required).issubset(set(provided))
-
-
-class Q:
-    def __missing__(self, key):
-        self[key] = self.__class__()

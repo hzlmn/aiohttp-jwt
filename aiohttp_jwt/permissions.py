@@ -17,7 +17,7 @@ def login_required(func):
 
         assert isinstance(request, web.Request)
 
-        if not request.get(_config.request_property):
+        if not request.get(_config['request_property']):
             raise web.HTTPUnauthorized(reason='Authorization required')
 
         return await func(*args, **kwargs)
@@ -42,7 +42,7 @@ def check_permissions(
 
             assert isinstance(request, web.Request)
 
-            payload = request.get(_config.request_property)
+            payload = request.get(_config['request_property'])
 
             if not payload:
                 raise web.HTTPUnauthorized(reason='Authorization required')
