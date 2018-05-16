@@ -1,5 +1,4 @@
 import logging
-import re
 from functools import partial
 
 import jwt
@@ -51,7 +50,7 @@ def JWTMiddleware(
                         reason='Invalid authorization header',
                     )
 
-                if not re.match('Bearer', scheme):
+                if not scheme.startswith('Bearer'):
                     if credentials_required:
                         raise web.HTTPForbidden(
                             reason='Invalid token scheme',
