@@ -88,7 +88,7 @@ loop.run_until_complete(main())
 
 
 
-## Credentials
+## Credits
 
 This module inspired by official [auth0/express-jwt](https://github.com/auth0/express-jwt) middleware and
 [express-jwt-permissions](https://github.com/MichielDeMey/express-jwt-permissions) extension.
