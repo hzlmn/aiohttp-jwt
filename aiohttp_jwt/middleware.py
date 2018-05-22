@@ -1,8 +1,6 @@
 import logging
-import warnings
 from functools import partial
 
-import jwt as pyjwt
 from aiohttp import web
 
 from .jwt import JWTHandler, TokenDecodeError, TokenRetrieveError
