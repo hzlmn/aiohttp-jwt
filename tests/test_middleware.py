@@ -43,7 +43,7 @@ async def test_throw_on_wrong_token_scheme(
         'Authorization': 'Wrong {}'.format(token.decode('utf-8')),
     })
     assert response.status == 403
-    assert 'Invalid token scheme' in response.reason
+    assert 'Invalid authorization scheme' in response.reason
 
 
 async def test_throw_on_wrong_header_format(
@@ -98,7 +98,7 @@ def form_auth(scheme, correct):
 async def test_credentials_not_required(
         schema, correct_token, req_property_exists, resp_status,
         create_app, aiohttp_client, fake_payload,
-        ):
+):
     async def handler(request):
         assert bool(request.get("payload")) == req_property_exists
         return web.json_response({})
@@ -142,11 +142,6 @@ async def test_request_property(
         'Authorization': 'Bearer {}'.format(token.decode('utf-8')),
     })
     assert response.status == 200
-
-
-async def test_request_property_invalid_type(create_app):
-    with pytest.raises(TypeError):
-        create_app([], request_property={})
 
 
 async def test_storing_token(create_app, aiohttp_client, fake_payload, token):

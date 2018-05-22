@@ -1,12 +1,14 @@
 import logging
+import warnings
 from functools import partial
 
-import jwt
+import jwt as pyjwt
 from aiohttp import web
 
+from .jwt import JWTHandler, TokenDecodeError, TokenRetrieveError
 from .utils import invoke, match_patterns
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('aiohttp_jwt')
 
 _config = dict()
 
@@ -22,12 +24,14 @@ def JWTMiddleware(
     algorithms=None,
 ):
     if not (secret_or_pub_key and isinstance(secret_or_pub_key, str)):
-        raise RuntimeError(
-            'secret or public key should be provided for correct work',
-        )
+        raise RuntimeError('secret or public key should be provided' +
+                           'for correct work')
 
-    if not isinstance(request_property, str):
-        raise TypeError('request_property should be a str')
+    jwt_handler = JWTHandler(
+        secret=secret_or_pub_key,
+        token_required=credentials_required,
+        options={'algorithms': algorithms, }
+    )
 
     _config['request_property'] = request_property
 
@@ -39,40 +43,27 @@ def JWTMiddleware(
             token = None
 
             if callable(token_getter):
-                token = await invoke(partial(token_getter, request))
+                token = await invoke(partial(
+                    token_getter,
+                    request,
+                ))
             elif 'Authorization' in request.headers:
                 try:
-                    scheme, token = request.headers.get(
-                        'Authorization'
-                    ).strip().split(' ')
-                except ValueError:
-                    raise web.HTTPForbidden(
-                        reason='Invalid authorization header',
-                    )
-
-                if not scheme.startswith('Bearer'):
-                    if credentials_required:
-                        raise web.HTTPForbidden(
-                            reason='Invalid token scheme',
-                        )
-                    return await handler(request)
+                    token = jwt_handler.get_token(request.headers)
+                except TokenRetrieveError as exc:
+                    raise web.HTTPForbidden(reason=str(exc))
 
             if not token and credentials_required:
                 raise web.HTTPUnauthorized(
-                    reason='Missing authorization token',
-                )
+                    reason='Missing authorization token')
 
             if token is not None:
                 if not isinstance(token, bytes):
                     token = token.encode()
 
                 try:
-                    decoded = jwt.decode(
-                        token,
-                        secret_or_pub_key,
-                        algorithms=algorithms,
-                    )
-                except jwt.InvalidTokenError as exc:
+                    decoded = jwt_handler.decode(token)
+                except TokenDecodeError as exc:
                     logger.exception(exc, exc_info=exc)
                     msg = 'Invalid authorization token, ' + str(exc)
                     raise web.HTTPForbidden(reason=msg)
