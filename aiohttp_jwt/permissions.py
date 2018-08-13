@@ -17,23 +17,20 @@ def login_required(func):
 
         assert isinstance(request, web.Request)
 
-        if not request.get(_config['request_property']):
-            raise web.HTTPUnauthorized(reason='Authorization required')
+        if not request.get(_config["request_property"]):
+            raise web.HTTPUnauthorized(reason="Authorization required")
 
         return await func(*args, **kwargs)
+
     return wrapped
 
 
-def check_permissions(
-    scopes,
-    permissions_property='scopes',
-    comparison=match_all,
-):
+def check_permissions(scopes, permissions_property="scopes", comparison=match_all):
     if not callable(comparison):
-        raise TypeError('comparison should be a func')
+        raise TypeError("comparison should be a func")
 
     if isinstance(scopes, str):
-        scopes = scopes.split(' ')
+        scopes = scopes.split(" ")
 
     def scopes_checker(func):
         @wraps(func)
@@ -42,20 +39,21 @@ def check_permissions(
 
             assert isinstance(request, web.Request)
 
-            payload = request.get(_config['request_property'])
+            payload = request.get(_config["request_property"])
 
             if not payload:
-                raise web.HTTPUnauthorized(reason='Authorization required')
+                raise web.HTTPUnauthorized(reason="Authorization required")
 
             user_scopes = payload.get(permissions_property, [])
 
             if not isinstance(user_scopes, collections.Iterable):
-                raise web.HTTPForbidden(reason='Invalid permissions format')
+                raise web.HTTPForbidden(reason="Invalid permissions format")
 
             if not comparison(scopes, user_scopes):
-                raise web.HTTPForbidden(reason='Insufficient scopes')
+                raise web.HTTPForbidden(reason="Insufficient scopes")
 
             return await func(*args, **kwargs)
+
         return wrapped
 
     return scopes_checker

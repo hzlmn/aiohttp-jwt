@@ -15,7 +15,7 @@ class TokenDecodeError(TokenError):
 
 class JWTHandler:
 
-    scheme = 'Bearer'
+    scheme = "Bearer"
 
     def __init__(self, secret, token_required, options=None):
         if not options:
@@ -26,22 +26,22 @@ class JWTHandler:
         self.options = options
 
     def get_token(self, headers):
-        header = headers.get('Authorization')
+        header = headers.get("Authorization")
 
         if not header:
             if self.token_required:
-                raise TokenRetrieveError('Token was not provided')
+                raise TokenRetrieveError("Token was not provided")
 
             return
 
         try:
-            scheme, token = header.strip().split(' ')
+            scheme, token = header.strip().split(" ")
         except ValueError:
-            raise TokenRetrieveError('Invalid authorization header format')
+            raise TokenRetrieveError("Invalid authorization header format")
 
         if not scheme.startswith(self.scheme):
             if self.token_required:
-                raise TokenRetrieveError('Invalid authorization scheme')
+                raise TokenRetrieveError("Invalid authorization scheme")
 
             return
 
@@ -49,10 +49,6 @@ class JWTHandler:
 
     def decode(self, token):
         try:
-            return jwt.decode(
-                token,
-                self.secret,
-                **self.options,
-            )
+            return jwt.decode(token, self.secret, **self.options)
         except jwt.InvalidTokenError as exc:
             raise TokenDecodeError(exc)
