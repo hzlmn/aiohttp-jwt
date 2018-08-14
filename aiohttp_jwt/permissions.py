@@ -19,7 +19,15 @@ def match_all(required, provided):
 def login_required(func):
     async def wrapped(*args, **kwargs):
         request = args[-1]
-        assert isinstance(request, web.Request)
+
+        if isinstance(request, web.View):
+            request = request.request
+
+        if not isinstance(request, web.BaseRequest):
+            raise RuntimeError(
+                'Incorrect usage of decorator.'
+                'Expect web.BaseRequest as an argument')
+
         request_property = __config[__REQUEST_IDENT]
 
         if not request.get(request_property):
@@ -43,7 +51,15 @@ def check_permissions(
     def scopes_checker(func):
         async def wrapped(*args, **kwargs):
             request = args[-1]
-            assert isinstance(request, web.Request)
+
+            if isinstance(request, web.View):
+                request = request.request
+
+            if not isinstance(request, web.BaseRequest):
+                raise RuntimeError(
+                    'Incorrect usage of decorator.'
+                    'Expect web.BaseRequest as an argument')
+
             request_property = __config[__REQUEST_IDENT]
             payload = request.get(request_property)
 
