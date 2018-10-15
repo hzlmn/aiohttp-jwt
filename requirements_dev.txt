@@ -1,6 +1,6 @@
 aiohttp==3.4.4
 flake8==3.5.0
-pytest==3.5.0
+pytest==3.8.2
 pytest-cov==2.5.1
 pytest-aiohttp==0.3.0
 pytest-mock==1.8.0
