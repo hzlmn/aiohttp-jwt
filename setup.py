@@ -43,7 +43,7 @@ setup(
     url='https://github.com/hzlmn/aiohttp-jwt',
     author='Oleh Kuchuk',
     author_email='kuchuklehjs@gmail.com',
-    license=read('LICENSE.txt'),
+    license='MIT',
     packages=packages,
     install_requires=install_requires,
     zip_safe=False,
