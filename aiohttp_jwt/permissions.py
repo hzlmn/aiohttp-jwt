@@ -23,7 +23,7 @@ def login_required(func):
         if isinstance(request, web.View):
             request = request.request
 
-        if not isinstance(request, web.BaseRequest):
+        if not isinstance(request, web.BaseRequest):  # pragma: no cover
             raise RuntimeError(
                 'Incorrect usage of decorator.'
                 'Expect web.BaseRequest as an argument')
@@ -55,7 +55,7 @@ def check_permissions(
             if isinstance(request, web.View):
                 request = request.request
 
-            if not isinstance(request, web.BaseRequest):
+            if not isinstance(request, web.BaseRequest):  # pragma: no cover
                 raise RuntimeError(
                     'Incorrect usage of decorator.'
                     'Expect web.BaseRequest as an argument')
