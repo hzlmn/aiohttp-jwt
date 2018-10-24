@@ -40,6 +40,7 @@ setup(
     version=get_version(),
     description='aiohttp middleware for working with JWT',
     long_description=read('README.md'),
+    long_description_content_type='text/markdown',
     url='https://github.com/hzlmn/aiohttp-jwt',
     author='Oleh Kuchuk',
     author_email='kuchuklehjs@gmail.com',

@@ -1,9 +1,19 @@
 
+- [0.2.0]
+  
+  *Additions*
+
+  * Added support for [class based views](https://docs.aiohttp.org/en/stable/web_quickstart.html#class-based-views) in decorators https://github.com/hzlmn/aiohttp-jwt/issues/52. Thanks @citijk for the report!
+
+  *Misc*
+  
+  * Cleanup a bit project structure
+
 - [0.1.1]
 
   *Fixes*
 
-  * Fixed issue with non bearer token scheme https://github.com/hzlmn/aiohttp-jwt/issues/14 .Thanks @vikitikitavi
+  * Fixed issue with non bearer token scheme https://github.com/hzlmn/aiohttp-jwt/issues/14. Thanks @vikitikitavi
 
 
 - [0.1.0]
