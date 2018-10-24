@@ -1,6 +1,7 @@
 import jwt
 import pytest
 from aiohttp import web
+
 from aiohttp_jwt import JWTMiddleware
 
 

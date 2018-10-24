@@ -9,18 +9,21 @@ python:
   - "3.6"
 
 install:
-  - pip install -U setuptools
-  - pip install -U pip
-  - pip install -U wheel
-  - pip install -U tox
   - pip install codecov
-
+  - pip install -r requirements_dev.txt
+  - pip install -e .
 
 script:
-  - export TOXENV=py`python -c 'import sys; print("".join(map(str, sys.version_info[:2])))'`
-  - echo "$TOXENV"
+  - flake8 --show-source aiohttp_jwt
+  - isort --check-only -rc aiohttp_jwt --diff
 
-  - tox
+  - flake8 --show-source setup.py
+  - isort --check-only setup.py --diff
+
+  - flake8 --show-source tests
+  - isort --check-only -rc tests --diff
+
+  - pytest --cov=./aiohttp_jwt tests/
 
 after_success:
   - codecov
