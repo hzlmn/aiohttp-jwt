@@ -2,8 +2,11 @@ import logging
 import re
 from functools import partial
 
+import attr
 import jwt
 from aiohttp import web
+
+from typing import Callable, Dict
 
 from .utils import check_request, invoke
 
@@ -14,86 +17,63 @@ __config = dict()
 __REQUEST_IDENT = 'request_property'
 
 
-def JWTMiddleware(
-    secret_or_pub_key,
-    request_property='payload',
-    credentials_required=True,
-    whitelist=tuple(),
-    token_getter=None,
-    is_revoked=None,
-    store_token=False,
-    algorithms=None,
-):
-    if not (secret_or_pub_key and isinstance(secret_or_pub_key, str)):
-        raise RuntimeError(
-            'secret or public key should be provided for correct work',
-        )
+@attr.s
+class JWTMiddleware:
+    secret = attr.ib()
+    token_getter = attr.ib(default=None)
+    is_revoked = attr.ib(default=None)
+    algorithms = attr.ib(default=None)
+    identity = attr.ib(default='payload')
+    credentials_required = attr.ib(default=True)
+    whitelist = attr.ib(default=tuple())
+    store_token = attr.ib(default=False)
 
-    if not isinstance(request_property, str):
-        raise TypeError('request_property should be a str')
+    async def __call__(self, app: web.Application, handler: web.RequestHandler) -> Callable:
+        return partial(self.middleware, handler)
 
-    __config[__REQUEST_IDENT] = request_property
+    def _encode(self, token: str) -> bytes:
+        if not isinstance(token, bytes):
+            return token.encode()
+        return token
 
-    async def factory(app, handler):
-        async def middleware(request):
-            if check_request(request, whitelist):
-                return await handler(request)
+    async def _decode(self, token: bytes) -> Dict[str, str]:
+        try:
+            return jwt.decode(token, self.secret, algorithms=self.algorithms)
+        except jwt.InvalidTokenError as exc:
+            logger.exception(exc, exc_info=exc)
+            return None
 
-            token = None
+    async def _get_token(self, request: web.BaseRequest) -> str:
+        token = None
+        if callable(self.token_getter):
+            return await invoke(partial(self.token_getter, request))
+        return token
 
-            if callable(token_getter):
-                token = await invoke(partial(token_getter, request))
-            elif 'Authorization' in request.headers:
-                try:
-                    scheme, token = request.headers.get(
-                        'Authorization'
-                    ).strip().split(' ')
-                except ValueError:
-                    raise web.HTTPForbidden(
-                        reason='Invalid authorization header',
-                    )
-
-                if not re.match('Bearer', scheme):
-                    if credentials_required:
-                        raise web.HTTPForbidden(
-                            reason='Invalid token scheme',
-                        )
-                    return await handler(request)
-
-            if not token and credentials_required:
-                raise web.HTTPUnauthorized(
-                    reason='Missing authorization token',
-                )
-
-            if token is not None:
-                if not isinstance(token, bytes):
-                    token = token.encode()
-
-                try:
-                    decoded = jwt.decode(
-                        token,
-                        secret_or_pub_key,
-                        algorithms=algorithms,
-                    )
-                except jwt.InvalidTokenError as exc:
-                    logger.exception(exc, exc_info=exc)
-                    msg = 'Invalid authorization token, ' + str(exc)
-                    raise web.HTTPForbidden(reason=msg)
-
-                if callable(is_revoked):
-                    if await invoke(partial(
-                        is_revoked,
-                        request,
-                        decoded,
-                    )):
-                        raise web.HTTPForbidden(reason='Token is revoked')
-
-                request[request_property] = decoded
-
-                if store_token and isinstance(store_token, str):
-                    request[store_token] = token
-
+    async def middleware(self, handler, request):
+        if check_request(request, self.whitelist):
             return await handler(request)
-        return middleware
 
-    return factory
+        token = await self._get_token(request)
+
+        if not token:
+            if self.credentials_required:
+                raise web.HTTPForbidden(reason='Missing authorization token')
+            return await handler(request)
+
+        token = self._ensure_encoding(token)
+
+        info = self._decode(token)
+
+        if info is None:
+            raise web.HTTPForbidden('Failed to retrive token information')
+
+        if callable(self.is_revoked):
+            if await invoke(partial(is_revoked, request, info)):
+                raise web.HTTPForbidden(reason='Token is revoked')
+
+        request[self.request_property] = info
+
+        if self.store_token:
+            request[self.store_token] = token
+
+        return await handler(request)
