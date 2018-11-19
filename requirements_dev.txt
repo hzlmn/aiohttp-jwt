@@ -14,7 +14,7 @@ multidict==4.4.2
 pluggy==0.8.0
 py==1.7.0
 pycodestyle==2.4.0
-pyflakes==1.6.0
+pyflakes==2.0.0
 PyJWT==1.6.1
 pytest==3.9.2
 pytest-aiohttp==0.3.0
