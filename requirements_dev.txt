@@ -10,7 +10,7 @@ idna-ssl==1.1.0
 isort==4.3.4
 mccabe==0.6.1
 more-itertools==4.3.0
-multidict==4.4.2
+multidict==4.5.2
 pluggy==0.8.0
 py==1.7.0
 pycodestyle==2.3.1
