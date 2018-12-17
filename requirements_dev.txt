@@ -20,5 +20,5 @@ pytest==4.0.2
 pytest-aiohttp==0.3.0
 pytest-cov==2.6.0
 pytest-mock==1.10.0
-six==1.11.0
+six==1.12.0
 yarl==1.2.6
