@@ -1,4 +1,4 @@
-aiohttp==3.4.4
+aiohttp==3.5.0
 async-timeout==3.0.1
 atomicwrites==1.2.1
 attrs==18.2.0
