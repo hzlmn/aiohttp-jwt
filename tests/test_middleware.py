@@ -220,3 +220,30 @@ async def test_token_revoked(
     })
     assert response.status == 403
     assert 'Token is revoked' in response.reason
+
+
+@pytest.mark.parametrize(
+    "configured_header_prefix, provided_header_prefix, resp_status", [
+        ("Bearer", "Bearer", 200),
+        ("Bearer", "JWT", 403),
+        ("Bearer", "", 403),
+        ("JWT", "JWT", 200),
+        ("JWT", "Bearer", 403),
+    ]
+)
+async def test_custom_header_prefix(
+        configured_header_prefix, provided_header_prefix, resp_status,
+        create_app, aiohttp_client, token):
+    async def handler(request):
+        return web.json_response({})
+    routes = (('/foo', handler),)
+    client = await aiohttp_client(
+        create_app(routes, header_prefix=configured_header_prefix),
+    )
+
+    response = await client.get('/foo', headers={
+        'Authorization': '{} {}'.format(
+            provided_header_prefix,
+            token.decode('utf-8')),
+    })
+    assert response.status == resp_status
