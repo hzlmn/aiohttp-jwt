@@ -220,3 +220,27 @@ async def test_token_revoked(
     })
     assert response.status == 403
     assert 'Token is revoked' in response.reason
+
+
+@pytest.mark.parametrize(
+    "configured_auth_scheme, provided_auth_scheme, resp_status", [
+        ("JWT", "JWT", 200),
+        ("JWT", "Bearer", 403),
+    ]
+)
+async def test_custom_auth_scheme(
+        configured_auth_scheme, provided_auth_scheme, resp_status,
+        create_app, aiohttp_client, token):
+    async def handler(request):
+        return web.json_response({})
+    routes = (('/foo', handler),)
+    client = await aiohttp_client(
+        create_app(routes, auth_scheme=configured_auth_scheme),
+    )
+
+    response = await client.get('/foo', headers={
+        'Authorization': '{} {}'.format(
+            provided_auth_scheme,
+            token.decode('utf-8')),
+    })
+    assert response.status == resp_status
