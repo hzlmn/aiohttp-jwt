@@ -23,7 +23,7 @@ def JWTMiddleware(
     is_revoked=None,
     store_token=False,
     algorithms=None,
-    header_prefix='Bearer',
+    auth_scheme='Bearer',
 ):
     if not (secret_or_pub_key and isinstance(secret_or_pub_key, str)):
         raise RuntimeError(
@@ -54,7 +54,7 @@ def JWTMiddleware(
                         reason='Invalid authorization header',
                     )
 
-                if not re.match(header_prefix, scheme):
+                if not re.match(auth_scheme, scheme):
                     if credentials_required:
                         raise web.HTTPForbidden(
                             reason='Invalid token scheme',

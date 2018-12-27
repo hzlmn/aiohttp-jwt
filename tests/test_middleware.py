@@ -223,27 +223,24 @@ async def test_token_revoked(
 
 
 @pytest.mark.parametrize(
-    "configured_header_prefix, provided_header_prefix, resp_status", [
-        ("Bearer", "Bearer", 200),
-        ("Bearer", "JWT", 403),
-        ("Bearer", "", 403),
+    "configured_auth_scheme, provided_auth_scheme, resp_status", [
         ("JWT", "JWT", 200),
         ("JWT", "Bearer", 403),
     ]
 )
-async def test_custom_header_prefix(
-        configured_header_prefix, provided_header_prefix, resp_status,
+async def test_custom_auth_scheme(
+        configured_auth_scheme, provided_auth_scheme, resp_status,
         create_app, aiohttp_client, token):
     async def handler(request):
         return web.json_response({})
     routes = (('/foo', handler),)
     client = await aiohttp_client(
-        create_app(routes, header_prefix=configured_header_prefix),
+        create_app(routes, auth_scheme=configured_auth_scheme),
     )
 
     response = await client.get('/foo', headers={
         'Authorization': '{} {}'.format(
-            provided_header_prefix,
+            provided_auth_scheme,
             token.decode('utf-8')),
     })
     assert response.status == resp_status
