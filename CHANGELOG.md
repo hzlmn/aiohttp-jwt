@@ -1,3 +1,9 @@
+## v0.3.0
+
+* Added [`auth_scheme`](https://github.com/hzlmn/aiohttp-jwt/blob/master/aiohttp_jwt/middleware.py#L24) option to `JWTMIddleware` that allows customization of authorization header prefix [#77](https://github.com/hzlmn/aiohttp-jwt/pull/77). By default value is `Bearer`. Thanks @gbarbaten 
+  
+* Added explicit exception when decorators are used without proper middleware initialization & minor cleaning [#85](https://github.com/hzlmn/aiohttp-jwt/pull/85)
+
 ## v0.2.0
 
  * Added support for [class based views](https://docs.aiohttp.org/en/stable/web_quickstart.html#class-based-views) in decorators [#52](https://github.com/hzlmn/aiohttp-jwt/issues/52). Thanks [@citijk](github.com/citijk) for the report!
