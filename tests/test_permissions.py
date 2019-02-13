@@ -5,6 +5,22 @@ from aiohttp import web
 from aiohttp_jwt import check_permissions, login_required, match_any
 
 
+@pytest.yield_fixture
+def patch_module():
+    import aiohttp_jwt.middleware as middleware
+    old_value = middleware._request_property
+    middleware._request_property = ...
+    yield
+    middleware._request_property = old_value
+
+
+async def test_login_required_jwt_not_initialized(patch_module):
+    with pytest.raises(RuntimeError):
+        @login_required
+        async def handler(request):
+            return web.json_response()
+
+
 async def test_login_required(create_app, aiohttp_client):
     @login_required
     async def handler(request):
@@ -46,6 +62,13 @@ async def test_login_required_view(
     response = await client.get('/foo')
     assert response.status == 401
     assert 'Authorization required' in response.reason
+
+
+async def test_check_permissions_jwt_not_initialized(patch_module):
+    with pytest.raises(RuntimeError):
+        @check_permissions([])
+        async def handler(request):
+            return web.json_response()
 
 
 async def test_check_permissions(

@@ -3,7 +3,7 @@ import logging
 
 from aiohttp import web
 
-from .middleware import __REQUEST_IDENT, __config
+import aiohttp_jwt.middleware as middleware
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +17,10 @@ def match_all(required, provided):
 
 
 def login_required(func):
+    if middleware._request_property is ...:
+        raise RuntimeError('Incorrect usage of decorator.',
+                           'Please initialize middleware first')
+
     async def wrapped(*args, **kwargs):
         request = args[-1]
 
@@ -28,9 +32,7 @@ def login_required(func):
                 'Incorrect usage of decorator.'
                 'Expect web.BaseRequest as an argument')
 
-        request_property = __config[__REQUEST_IDENT]
-
-        if not request.get(request_property):
+        if not request.get(middleware._request_property):
             raise web.HTTPUnauthorized(reason='Authorization required')
 
         return await func(*args, **kwargs)
@@ -42,6 +44,10 @@ def check_permissions(
     permissions_property='scopes',
     comparison=match_all,
 ):
+    if middleware._request_property is ...:
+        raise RuntimeError('Incorrect usage of decorator.',
+                           'Please initialize middleware first')
+
     if not callable(comparison):
         raise TypeError('comparison should be a func')
 
@@ -60,8 +66,7 @@ def check_permissions(
                     'Incorrect usage of decorator.'
                     'Expect web.BaseRequest as an argument')
 
-            request_property = __config[__REQUEST_IDENT]
-            payload = request.get(request_property)
+            payload = request.get(middleware._request_property)
 
             if not payload:
                 raise web.HTTPUnauthorized(reason='Authorization required')

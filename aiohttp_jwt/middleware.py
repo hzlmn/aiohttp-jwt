@@ -9,9 +9,7 @@ from .utils import check_request, invoke
 
 logger = logging.getLogger(__name__)
 
-__config = dict()
-
-__REQUEST_IDENT = 'request_property'
+_request_property = ...
 
 
 def JWTMiddleware(
@@ -33,7 +31,9 @@ def JWTMiddleware(
     if not isinstance(request_property, str):
         raise TypeError('request_property should be a str')
 
-    __config[__REQUEST_IDENT] = request_property
+    global _request_property
+
+    _request_property = request_property
 
     async def factory(app, handler):
         async def middleware(request):
