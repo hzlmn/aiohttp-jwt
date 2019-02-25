@@ -22,6 +22,8 @@ def JWTMiddleware(
     store_token=False,
     algorithms=None,
     auth_scheme='Bearer',
+    audience=None,
+    issuer=None
 ):
     if not (secret_or_pub_key and isinstance(secret_or_pub_key, str)):
         raise RuntimeError(
@@ -75,6 +77,8 @@ def JWTMiddleware(
                         token,
                         secret_or_pub_key,
                         algorithms=algorithms,
+                        audience=audience,
+                        issuer=issuer
                     )
                 except jwt.InvalidTokenError as exc:
                     logger.exception(exc, exc_info=exc)
