@@ -100,4 +100,3 @@ def JWTMiddleware(
 
         return await handler(request)
     return jwt_middleware
-
