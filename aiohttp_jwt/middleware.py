@@ -25,7 +25,7 @@ def JWTMiddleware(
     audience=None,
     issuer=None
 ):
-    if not (secret_or_pub_key and isinstance(secret_or_pub_key, str)):
+    if not secret_or_pub_key:
         raise RuntimeError(
             'secret or public key should be provided for correct work',
         )
