@@ -50,7 +50,7 @@ def JWTMiddleware(
             try:
                 scheme, token = request.headers.get(
                     'Authorization'
-                ).strip().split(' ')
+                ).split()
             except ValueError:
                 raise web.HTTPForbidden(
                     reason='Invalid authorization header',
