@@ -1,6 +1,10 @@
+## v0.5.0
+
+* Switched to new style aiohttp middleware [#94](https://github.com/hzlmn/aiohttp-jwt/pull/94). Thanks [@Ranc58](github.com/Ranc58) 
+
 ## v0.4.0
 
-* Added `issue` and `audience` claims support #80 . Thanks @idegree 
+* Added `issue` and `audience` claims support [#80](https://github.com/hzlmn/aiohttp-jwt/pull/80) . Thanks [@idegree](github.com/idegree)
 
 ## v0.3.0
 
