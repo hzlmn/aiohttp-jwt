@@ -69,7 +69,7 @@ async def test_forbidden_on_wrong_secret(
     response = await client.get('/foo', headers={
         'Authorization': 'Bearer {}'.format(token),
     })
-    assert response.status == 403
+    assert response.status == 401
     assert 'Invalid authorization token' in response.reason
 
 
@@ -91,7 +91,7 @@ def form_auth(scheme, correct):
         ("Bearer", True, True, 200),
         ("Invalid_scheme", True, False, 200),
         ("Invalid_scheme", False, False, 200),
-        ("Bearer", False, False, 403),
+        ("Bearer", False, False, 401),
         ("", False, False, 200),
     ]
 )
