@@ -83,7 +83,7 @@ def JWTMiddleware(
             except jwt.InvalidTokenError as exc:
                 logger.exception(exc, exc_info=exc)
                 msg = 'Invalid authorization token, ' + str(exc)
-                raise web.HTTPForbidden(reason=msg)
+                raise web.HTTPUnauthorized(reason=msg)
 
             if callable(is_revoked):
                 if await invoke(partial(
