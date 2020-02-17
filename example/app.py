@@ -9,50 +9,36 @@ from aiohttp_jwt import JWTMiddleware, check_permissions, match_any
 logger = logging.getLogger(__name__)
 
 
-secret = 'your secret'
-
-
-async def foo_handler(request):
-    return json_response({'status': 'OK'})
-
-
-@check_permissions([
-    'user:admin',
-    'olehkuchuk',
-], comparison=match_any)
-async def protected_handler(request):
-    payload = request.get('user', {})
-    return json_response({
-        'status': 'OK',
-        'username': payload.get('username'),
-    })
+secret = "your secret"
 
 
 async def get_token(request):
-    return jwt.encode({
-        'username': 'olehkuchuk',
-        'scopes': [
-            'user:admin',
-        ],
-    }, secret)
-    return None
+    return jwt.encode({"username": "johndoe", "scopes": ["user:admin"]}, secret)
 
-app = web.Application(
-    middlewares=[
-        JWTMiddleware(
-            secret=secret,
-            request_property='user',
-            token_getter=get_token,
-            credentials_required=False,
-            whitelist=[
-                r'/(foo|bar)'
-            ],
-        ),
-    ]
+
+jwt_middleware = JWTMiddleware(
+    secret,
+    request_property="user",
+    token_getter=get_token,
+    credentials_required=False,
+    whitelist=[r"/(foo|bar)"],
 )
 
-app.router.add_get('/foo', foo_handler)
-app.router.add_get('/protected', protected_handler)
 
-if __name__ == '__main__':
+async def foo_handler(request):
+    return json_response({"status": "OK"})
+
+
+@check_permissions(["user:admin", "johndoe"], comparison=match_any)
+async def protected_handler(request):
+    payload = request.get("user", {})
+    return json_response({"status": "OK", "username": payload.get("username")})
+
+
+app = web.Application(middlewares=[jwt_middleware])
+
+app.router.add_get("/foo", foo_handler)
+app.router.add_get("/protected", protected_handler)
+
+if __name__ == "__main__":
     web.run_app(app)
