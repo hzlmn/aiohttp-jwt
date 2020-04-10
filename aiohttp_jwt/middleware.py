@@ -3,7 +3,7 @@ import re
 from functools import partial
 
 import jwt
-from aiohttp import web
+from aiohttp import web, hdrs
 
 from .utils import check_request, invoke
 
@@ -39,6 +39,9 @@ def JWTMiddleware(
 
     @web.middleware
     async def jwt_middleware(request, handler):
+        if request.method == hdrs.METH_OPTIONS:
+            return await handler(request)
+
         if check_request(request, whitelist):
             return await handler(request)
 
