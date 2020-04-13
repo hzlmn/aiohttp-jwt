@@ -1,6 +1,6 @@
 import jwt
 import pytest
-from aiohttp import web, hdrs
+from aiohttp import web
 
 from aiohttp_jwt import JWTMiddleware
 
@@ -246,9 +246,9 @@ async def test_custom_auth_scheme(
     assert response.status == resp_status
 
 
-async def test_pass_preflight_options_request(create_app, aiohttp_client, fake_payload, token):
+async def test_pass_preflight_options_request(
+        create_app, aiohttp_client, fake_payload, token):
     async def handler(request):
-        assert request.method == hdrs.METH_OPTIONS
         return web.json_response({})
 
     views = (('/foo', handler),)
