@@ -1,3 +1,9 @@
+## v0.6.0
+
+* Raise `UnAuthorized` instead of `Forbidden` [#129](https://github.com/hzlmn/aiohttp-jwt/pull/129). Thanks [@rockwelln](https://github.com/rockwelln)
+
+* Added preflight (OPTIONS) request skip [#139](https://github.com/hzlmn/aiohttp-jwt/pull/139). Thanks [@ckkz-it](https://github.com/ckkz-it)
+
 ## v0.5.0
 
 * Switched to new style aiohttp middleware [#94](https://github.com/hzlmn/aiohttp-jwt/pull/94). Thanks [@Ranc58](github.com/Ranc58) 

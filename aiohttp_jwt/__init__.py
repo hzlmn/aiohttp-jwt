@@ -1,5 +1,5 @@
 
-__version__ = '0.5.0'
+__version__ = '0.6.0'
 
 from .middleware import JWTMiddleware
 from .permissions import (
