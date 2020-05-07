@@ -14,11 +14,16 @@ def patch_module():
     middleware._request_property = old_value
 
 
-async def test_login_required_jwt_not_initialized(patch_module):
-    with pytest.raises(RuntimeError):
-        @login_required
-        async def handler(request):
-            return web.json_response()
+async def test_login_required_jwt_not_initialized(patch_module, create_app, aiohttp_client):
+    @login_required
+    async def handler(request):
+        return web.json_response()
+
+    routes = (('/foo', handler),)
+    client = await aiohttp_client(
+        create_app(routes, credentials_required=False, init_middleware=False))
+    response = await client.get('/foo')
+    assert response.status == 500
 
 
 async def test_login_required(create_app, aiohttp_client):
@@ -64,11 +69,16 @@ async def test_login_required_view(
     assert 'Authorization required' in response.reason
 
 
-async def test_check_permissions_jwt_not_initialized(patch_module):
-    with pytest.raises(RuntimeError):
-        @check_permissions([])
-        async def handler(request):
-            return web.json_response()
+async def test_check_permissions_jwt_not_initialized(patch_module, create_app, aiohttp_client):
+    @check_permissions([])
+    async def handler(request):
+        return web.json_response()
+
+    routes = (('/foo', handler),)
+    client = await aiohttp_client(
+        create_app(routes, credentials_required=False, init_middleware=False))
+    response = await client.get('/foo')
+    assert response.status == 500
 
 
 async def test_check_permissions(

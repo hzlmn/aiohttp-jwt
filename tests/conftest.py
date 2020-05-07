@@ -24,18 +24,20 @@ def token(fake_payload, secret):
 def create_app(secret):
     def factory(routes=tuple(), views=tuple(), *args, **kwargs):
         defaults = {'secret_or_pub_key': secret}
-        app = web.Application(
-            middlewares=[
+        init_middleware = kwargs.pop('init_middleware', True)
+        middlewares = []
+        if init_middleware:
+            middlewares.append(
                 JWTMiddleware(
                     *args,
                     **{
                         **defaults,
                         **kwargs
                     },
-                ),
-            ],
-        )
+                )
+            )
 
+        app = web.Application(middlewares=middlewares)
         for path, handler in routes:
             app.router.add_get(path, handler)
 

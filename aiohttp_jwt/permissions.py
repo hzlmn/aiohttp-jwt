@@ -1,5 +1,6 @@
 import collections
 import logging
+from functools import wraps
 
 from aiohttp import web
 
@@ -17,11 +18,11 @@ def match_all(required, provided):
 
 
 def login_required(func):
-    if middleware._request_property is ...:
-        raise RuntimeError('Incorrect usage of decorator.',
-                           'Please initialize middleware first')
-
+    @wraps(func)
     async def wrapped(*args, **kwargs):
+        if middleware._request_property is ...:
+            raise RuntimeError('Incorrect usage of decorator.',
+                            'Please initialize middleware first')
         request = args[-1]
 
         if isinstance(request, web.View):
@@ -44,10 +45,6 @@ def check_permissions(
     permissions_property='scopes',
     comparison=match_all,
 ):
-    if middleware._request_property is ...:
-        raise RuntimeError('Incorrect usage of decorator.',
-                           'Please initialize middleware first')
-
     if not callable(comparison):
         raise TypeError('comparison should be a func')
 
@@ -55,7 +52,12 @@ def check_permissions(
         scopes = scopes.split(' ')
 
     def scopes_checker(func):
+        @wraps(func)
         async def wrapped(*args, **kwargs):
+            if middleware._request_property is ...:
+                raise RuntimeError('Incorrect usage of decorator.',
+                                'Please initialize middleware first')
+
             request = args[-1]
 
             if isinstance(request, web.View):
