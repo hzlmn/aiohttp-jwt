@@ -21,8 +21,8 @@ def login_required(func):
     @wraps(func)
     async def wrapped(*args, **kwargs):
         if middleware._request_property is ...:
-            raise RuntimeError('Incorrect usage of decorator.',
-                            'Please initialize middleware first')
+            raise RuntimeError('Incorrect usage of decorator.'
+                               'Please initialize middleware first')
         request = args[-1]
 
         if isinstance(request, web.View):
@@ -55,8 +55,8 @@ def check_permissions(
         @wraps(func)
         async def wrapped(*args, **kwargs):
             if middleware._request_property is ...:
-                raise RuntimeError('Incorrect usage of decorator.',
-                                'Please initialize middleware first')
+                raise RuntimeError('Incorrect usage of decorator.'
+                                   'Please initialize middleware first')
 
             request = args[-1]
 
