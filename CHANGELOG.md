@@ -1,3 +1,7 @@
+## v0.6.1
+
+* Minor fix for middleware initialization check inside decorators.
+
 ## v0.6.0
 
 * Raise `UnAuthorized` instead of `Forbidden` [#129](https://github.com/hzlmn/aiohttp-jwt/pull/129). Thanks [@rockwelln](https://github.com/rockwelln)
