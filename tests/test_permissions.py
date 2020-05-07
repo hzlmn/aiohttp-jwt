@@ -14,7 +14,8 @@ def patch_module():
     middleware._request_property = old_value
 
 
-async def test_login_required_jwt_not_initialized(patch_module, create_app, aiohttp_client):
+async def test_login_required_jwt_not_initialized(
+        patch_module, create_app, aiohttp_client):
     @login_required
     async def handler(request):
         return web.json_response()
@@ -69,7 +70,8 @@ async def test_login_required_view(
     assert 'Authorization required' in response.reason
 
 
-async def test_check_permissions_jwt_not_initialized(patch_module, create_app, aiohttp_client):
+async def test_check_permissions_jwt_not_initialized(
+        patch_module, create_app, aiohttp_client):
     @check_permissions([])
     async def handler(request):
         return web.json_response()
