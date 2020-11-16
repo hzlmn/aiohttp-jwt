@@ -12,7 +12,7 @@ mccabe==0.6.1
 more-itertools==8.6.0
 multidict==5.0.2
 pluggy==0.13.1
-py==1.8.0
+py==1.9.0
 pycodestyle==2.5.0
 pyflakes==2.1.0
 PyJWT==1.7.1
