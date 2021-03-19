@@ -96,8 +96,8 @@ def JWTMiddleware(
                 )):
                     raise web.HTTPForbidden(reason='Token is revoked')
 
-            request[request_property] = decoded
-
+            setattr(request, request_property, decoded)
+            
             if store_token and isinstance(store_token, str):
                 request[store_token] = token
 
