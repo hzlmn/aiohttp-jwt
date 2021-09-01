@@ -1,10 +1,9 @@
 import asyncio
-import re
 
 
 def check_request(request, entries):
     for pattern in entries:
-        if re.match(pattern, request.path):
+        if pattern in request:
             return True
 
     return False
