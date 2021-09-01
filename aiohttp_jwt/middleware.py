@@ -1,6 +1,6 @@
 import logging
-import re
 from functools import partial
+from typing import Callable, Iterable, Optional, Union
 
 import jwt
 from aiohttp import web, hdrs
@@ -9,21 +9,21 @@ from .utils import check_request, invoke
 
 logger = logging.getLogger(__name__)
 
-_request_property = ...
+_request_property: str = ''
 
 
 def JWTMiddleware(
-    secret_or_pub_key,
-    request_property='payload',
-    credentials_required=True,
-    whitelist=tuple(),
-    token_getter=None,
-    is_revoked=None,
-    store_token=False,
-    algorithms=None,
-    auth_scheme='Bearer',
-    audience=None,
-    issuer=None
+    secret_or_pub_key: str,
+    request_property: str = 'payload',
+    credentials_required: bool = True,
+    whitelist: Iterable[str] = tuple(),
+    token_getter: str = None,
+    is_revoked: bool = None,
+    store_token: bool = False,
+    algorithms: Iterable[str] = None,
+    auth_scheme: str = 'Bearer',
+    audience: str = None,
+    issuer: str = None
 ):
     if not (secret_or_pub_key and isinstance(secret_or_pub_key, str)):
         raise RuntimeError(
@@ -38,28 +38,27 @@ def JWTMiddleware(
     _request_property = request_property
 
     @web.middleware
-    async def jwt_middleware(request, handler):
+    async def jwt_middleware(request: web.Request, handler: Callable):
         if request.method == hdrs.METH_OPTIONS:
             return await handler(request)
 
         if check_request(request, whitelist):
             return await handler(request)
 
-        token = None
+        token: Union[Optional[str], Optional[bytes]] = None
 
         if callable(token_getter):
             token = await invoke(partial(token_getter, request))
         elif 'Authorization' in request.headers:
             try:
                 scheme, token = request.headers.get(
-                    'Authorization'
-                ).strip().split(' ')
+                    'Authorization').strip().split(' ')
             except ValueError:
                 raise web.HTTPForbidden(
                     reason='Invalid authorization header',
                 )
 
-            if not re.match(auth_scheme, scheme):
+            if auth_scheme not in scheme:
                 if credentials_required:
                     raise web.HTTPForbidden(
                         reason='Invalid token scheme',
