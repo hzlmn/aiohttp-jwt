@@ -31,7 +31,7 @@ async def public_handler(request):
     )
 
 
-@check_permissions(["app/user:admin", "username:johndoe"], comparison=match_any)
+@check_permissions(["app/user:admin", "username:johndoe"], comparsion=match_any)
 async def protected_handler(request):
     return web.json_response({"username": request["user"].get("username")})
 

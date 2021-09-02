@@ -1,6 +1,7 @@
 import collections
 import logging
 from functools import wraps
+from typing import Any, Callable, Iterable, List, Union
 
 from aiohttp import web
 
@@ -9,17 +10,17 @@ import aiohttp_jwt.middleware as middleware
 logger = logging.getLogger(__name__)
 
 
-def match_any(required, provided):
+def match_any(required: Iterable, provided: Any) -> bool:
     return any([scope in provided for scope in required])
 
 
-def match_all(required, provided):
+def match_all(required: Iterable, provided: Iterable) -> bool:
     return set(required).issubset(set(provided))
 
 
-def login_required(func):
+def login_required(func: Callable) -> Callable:
     @wraps(func)
-    async def wrapped(*args, **kwargs):
+    async def wrapped(*args: Iterable, **kwargs: Any) -> Any:
         if middleware._request_property is ...:
             raise RuntimeError('Incorrect usage of decorator.'
                                'Please initialize middleware first')
@@ -41,19 +42,19 @@ def login_required(func):
 
 
 def check_permissions(
-    scopes,
-    permissions_property='scopes',
-    comparison=match_all,
-):
-    if not callable(comparison):
-        raise TypeError('comparison should be a func')
+    scopes: Union[str, List[str]],
+    permissions_property: str = 'scopes',
+    comparsion: Callable = match_all,
+) -> Callable:
+    if not callable(comparsion):
+        raise TypeError('comparsion should be a func')
 
     if isinstance(scopes, str):
         scopes = scopes.split(' ')
 
-    def scopes_checker(func):
+    def scopes_checker(func: Callable) -> Callable:
         @wraps(func)
-        async def wrapped(*args, **kwargs):
+        async def wrapped(*args: Any, **kwargs: Any) -> Any:
             if middleware._request_property is ...:
                 raise RuntimeError('Incorrect usage of decorator.'
                                    'Please initialize middleware first')
@@ -78,7 +79,7 @@ def check_permissions(
             if not isinstance(user_scopes, collections.Iterable):
                 raise web.HTTPForbidden(reason='Invalid permissions format')
 
-            if not comparison(scopes, user_scopes):
+            if not comparsion(scopes, user_scopes):
                 raise web.HTTPForbidden(reason='Insufficient scopes')
 
             return await func(*args, **kwargs)
