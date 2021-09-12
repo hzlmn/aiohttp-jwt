@@ -1,6 +1,7 @@
 import logging
 import re
 from functools import partial
+from typing import Any, Callable, Iterable, List, Optional, Union
 
 import jwt
 from aiohttp import web, hdrs
@@ -9,22 +10,22 @@ from .utils import check_request, invoke
 
 logger = logging.getLogger(__name__)
 
-_request_property = ...
+_request_property: Union[ellipsis, str] = ...
 
 
 def JWTMiddleware(
-    secret_or_pub_key,
-    request_property='payload',
-    credentials_required=True,
-    whitelist=tuple(),
-    token_getter=None,
-    is_revoked=None,
-    store_token=False,
-    algorithms=None,
-    auth_scheme='Bearer',
-    audience=None,
-    issuer=None
-):
+    secret_or_pub_key: str,
+    algorithms: List[str],
+    request_property: str = 'payload',
+    credentials_required: bool = True,
+    whitelist: Iterable = tuple(),
+    token_getter: Optional[str] = None,
+    is_revoked: Optional[bool] = None,
+    store_token: bool = False,
+    auth_scheme: str = 'Bearer',
+    audience: Optional[str] = None,
+    issuer: Optional[str] = None
+) -> Callable:
     if not (secret_or_pub_key and isinstance(secret_or_pub_key, str)):
         raise RuntimeError(
             'secret or public key should be provided for correct work',
@@ -38,14 +39,14 @@ def JWTMiddleware(
     _request_property = request_property
 
     @web.middleware
-    async def jwt_middleware(request, handler):
+    async def jwt_middleware(request: web.Request, handler: Callable) -> Any:
         if request.method == hdrs.METH_OPTIONS:
             return await handler(request)
 
         if check_request(request, whitelist):
             return await handler(request)
 
-        token = None
+        token: Union[bytes, Optional[str]] = None
 
         if callable(token_getter):
             token = await invoke(partial(token_getter, request))
@@ -72,8 +73,8 @@ def JWTMiddleware(
             )
 
         if token is not None:
-            if not isinstance(token, bytes):
-                token = token.encode()
+            if isinstance(token, bytes):
+                token = token.decode()
 
             try:
                 decoded = jwt.decode(
