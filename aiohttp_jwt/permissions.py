@@ -44,10 +44,10 @@ def login_required(func: Callable) -> Callable:
 def check_permissions(
     scopes: Union[str, List[str]],
     permissions_property: str = 'scopes',
-    comparsion: Callable = match_all,
+    comparison: Callable = match_all,
 ) -> Callable:
-    if not callable(comparsion):
-        raise TypeError('comparsion should be a func')
+    if not callable(comparison):
+        raise TypeError('comparison should be a func')
 
     if isinstance(scopes, str):
         scopes = scopes.split(' ')
@@ -79,7 +79,7 @@ def check_permissions(
             if not isinstance(user_scopes, collections.Iterable):
                 raise web.HTTPForbidden(reason='Invalid permissions format')
 
-            if not comparsion(scopes, user_scopes):
+            if not comparison(scopes, user_scopes):
                 raise web.HTTPForbidden(reason='Insufficient scopes')
 
             return await func(*args, **kwargs)

@@ -29,7 +29,7 @@ async def foo_handler(request):
     return json_response({"status": "OK"})
 
 
-@check_permissions(["user:admin", "johndoe"], comparsion=match_any)
+@check_permissions(["user:admin", "johndoe"], comparison=match_any)
 async def protected_handler(request):
     payload = request.get("user", {})
     return json_response({"status": "OK", "username": payload.get("username")})

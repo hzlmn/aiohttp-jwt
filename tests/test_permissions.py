@@ -158,7 +158,7 @@ async def test_scopes_strategies_match_any(
     @check_permissions([
         'view',
         'admin',
-    ], comparsion=match_any)
+    ], comparison=match_any)
     async def handler(request):
         return web.json_response({})
     routes = (('/foo', handler),)
@@ -186,10 +186,10 @@ async def test_check_permissions_scopes_string(
     assert response.status == 200
 
 
-@pytest.mark.parametrize('comparsion', [None, 'foo', {}, []])
-async def test_check_permissions_wrong_comparsion(comparsion):
+@pytest.mark.parametrize('comparison', [None, 'foo', {}, []])
+async def test_check_permissions_wrong_comparison(comparison):
     with pytest.raises(TypeError):
-        check_permissions(['foo'], comparsion=comparsion)
+        check_permissions(['foo'], comparison=comparison)
 
 
 async def test_login_required_with_wrong_auth_scheme(
