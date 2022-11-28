@@ -8,7 +8,7 @@ flake8==6.0.0
 idna==3.4
 idna-ssl==1.1.0
 isort==5.10.1
-mccabe==0.6.1
+mccabe==0.7.0
 more-itertools==6.0.0
 multidict==4.5.2
 pluggy==0.9.0
