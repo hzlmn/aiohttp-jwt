@@ -1,7 +1,7 @@
 aiohttp==3.8.3
 async-timeout==4.0.2
 atomicwrites==1.4.1
-attrs==18.2.0
+attrs==22.2.0
 chardet==3.0.4
 coverage==4.5.2
 flake8==3.7.6
