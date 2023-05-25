@@ -6,6 +6,11 @@ from aiohttp import web
 
 import aiohttp_jwt.middleware as middleware
 
+try:
+    collectionsAbc = collections.abc
+except AttributeError:
+    collectionsAbc = collections
+
 logger = logging.getLogger(__name__)
 
 
@@ -75,7 +80,7 @@ def check_permissions(
 
             user_scopes = payload.get(permissions_property, [])
 
-            if not isinstance(user_scopes, collections.Iterable):
+            if not isinstance(user_scopes, collectionsAbc.Iterable):
                 raise web.HTTPForbidden(reason='Invalid permissions format')
 
             if not comparison(scopes, user_scopes):
