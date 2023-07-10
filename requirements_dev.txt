@@ -13,7 +13,7 @@ more-itertools==9.1.0
 multidict==6.0.4
 pluggy==1.2.0
 py==1.11.0
-pycodestyle==2.5.0
+pycodestyle==2.10.0
 pyflakes==2.1.0
 PyJWT==1.7.1
 pytest==4.3.0
