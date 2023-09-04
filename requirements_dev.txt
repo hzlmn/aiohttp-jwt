@@ -16,7 +16,7 @@ py==1.11.0
 pycodestyle==2.11.0
 pyflakes==3.1.0
 PyJWT==2.8.0
-pytest==4.3.0
+pytest==7.4.1
 pytest-aiohttp==0.3.0
 pytest-cov==2.6.1
 pytest-mock==1.10.1
