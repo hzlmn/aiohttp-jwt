@@ -1,4 +1,4 @@
-__version__ = "0.7.1"
+__version__ = "0.7.2"
 
 from .middleware import JWTMiddleware
 from .permissions import check_permissions, login_required, match_all, match_any

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aiohttp-jwt"
-version = "0.7.1"
+version = "0.7.2"
 description = "Provides `aiohttp` middleware and helper utils for working with JSON web tokens."
 authors = ["Ten Product <product@tengroup.com>"]
 readme = "README.md"
