@@ -10,6 +10,10 @@ include ./make/print.lib.mk
 
 SHELL := /bin/bash
 PWD:=$(shell pwd)
+SSH_KEY_NAME ?= $(shell test -e $(HOME)/.ssh/id_ed25519 && echo id_ed25519 || echo id_rsa)
+
+MOUNTED_SSH_KEYS = -v ~/.ssh/${SSH_KEY_NAME}:/${SSH_KEY_NAME}:ro -v ~/.ssh/${SSH_KEY_NAME}.pub:/${SSH_KEY_NAME}.pub:ro
+MOUNTED_SSH_AUTH_SOCK := --env SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock -v /run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock ${MOUNTED_SSH_KEYS}
 
 #------------------------------
 # help
@@ -23,8 +27,7 @@ help:
 	$(call print_options,"build","Build docker images for development.")
 	$(call print_space)
 	$(call print_h2,"dependency")
-	$(call print_options,"pip-compile-rsa","Compile requirements.txt from requirements.in without upgrading the packages. (For users with SSH key built using RSA algorithm)")
-	$(call print_options,"pip-compile-ed-25519","Compile requirements.txt from requirements.in without upgrading the packages. (For users with SSH key built using Ed25519 algorithm)")
+	$(call print_options,"compile-deps","Compile the dependencies from pyproject.toml into a poetry.lock file without updating the existing dependencies.")
 	$(call print_space)
 	$(call print_h2,"test")
 	$(call print_options,"test","Run all tests.")
@@ -56,17 +59,10 @@ build-python-3.9:
 # dependency
 #------------------------------
 
-.PHONY: pip-compile-ed-25519
-pip-compile-ed-25519: build-python-3.9
-	$(call print_h1,"COMPILING","REQUIREMENTS","USING","ED25519")
-	docker run --entrypoint= --rm --tty --interactive --env SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock -v /run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock  -v ~/.ssh/id_ed25519:/id_ed25519:ro -v ~/.ssh/id_ed25519.pub:/id_ed25519.pub:ro -v ${PWD}:/tenplatform/aiohttp-jwt tenproduct/aiohttp_jwt_3_9 sh -c "ssh-add /id_ed25519 && pip-compile --no-header --output-file=requirements.txt"
-	$(call print_h1,"REQUIREMENTS","COMPILED")
-
-.PHONY: pip-compile-rsa
-pip-compile-rsa: build-python-3.9
-	$(call print_h1,"COMPILING","REQUIREMENTS","USING","RSA")
-	docker run --entrypoint= --rm --tty --interactive --env SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock -v /run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock  -v ~/.ssh/id_rsa:/id_rsa:ro -v ~/.ssh/id_rsa.pub:/id_rsa.pub:ro -v ${PWD}:/tenplatform/aiohttp-jwt tenproduct/aiohttp_jwt_3_9 sh -c "ssh-add /id_rsa && pip-compile --no-header --output-file=requirements.txt"
-	$(call print_h1,"REQUIREMENTS","COMPILED")
+.PHONY: compile-deps
+compile-deps: build
+	$(call print_h1,"COMPILING","REQUIREMENTS")
+	docker run --entrypoint= --rm --tty --interactive $(MOUNTED_SSH_AUTH_SOCK) tenproduct/ten_utils_opensearch /bin/bash -l -c 'eval "$$(ssh-agent)" && ssh-add /${SSH_KEY_NAME} && poetry lock --no-update'
 
 #------------------------------
 # code

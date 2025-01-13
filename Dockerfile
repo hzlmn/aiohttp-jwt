@@ -16,12 +16,19 @@ RUN apt-get update && \
 
 RUN mkdir -pm 0700 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
 
-COPY requirements.txt $DIRPATH/
+COPY pyproject.toml poetry.lock $WORKDIR
+
 
 RUN --mount=type=ssh \
     python -m venv $VIRTUAL_ENV && \
     pip install --upgrade pip  && \
-    pip install --upgrade pip-tools && \
+    pip install poetry==1.8.* && \
+    rm -r /root/.cache
+
+# Export Poetry dependencies to `requirements.txt` for Tox environment installation.
+RUN --mount=type=ssh python -m venv $VIRTUAL_ENV && poetry export --with dev --without-hashes --format=requirements.txt > requirements.txt
+
+RUN --mount=type=ssh \
     pip install -r requirements.txt && \
     rm -r /root/.cache
 

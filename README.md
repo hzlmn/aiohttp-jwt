@@ -35,14 +35,10 @@ pip install -r requirements.txt
 make test
 ```
 
-## Compile requirements (docker-based)
+## Compile dependencies (docker-based)
 
 ```shell
-# Run this if you have an ed25519 ssh key pair
-make pip-compile-ed-25519
-
-# Run this if you have an rsa ssh key pair
-make pip-compile-rsa
+make compile-deps
 ```
 
 
