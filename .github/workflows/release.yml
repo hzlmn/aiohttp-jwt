@@ -1,0 +1,157 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release Version (e.g., 1.2.3). Leave empty to auto-calculate.'
+        required: false
+        type: string
+      commit_hash:
+        description: 'Commit hash to tag (optional). Defaults to HEAD.'
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Run Tests
+    uses: ./.github/workflows/test.yml
+    secrets:
+      GH_APP_ID: ${{ secrets.GH_APP_ID }}
+      GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  release:
+    name: Tag & Release
+    needs: test
+    runs-on: self-hosted-arm-1gi
+    timeout-minutes: 15
+    steps:
+      - name: Generate GitHub App Token
+        id: generate_token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: "tenproduct"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.generate_token.outputs.token }}
+
+      - name: Checkout specific commit
+        if: inputs.commit_hash != ''
+        env:
+          TARGET_COMMIT_HASH: ${{ inputs.commit_hash }}
+        run: |
+          git fetch --all --tags
+          git checkout --detach "$TARGET_COMMIT_HASH" || (
+            git fetch origin "$TARGET_COMMIT_HASH" &&
+            git checkout --detach "$TARGET_COMMIT_HASH"
+          )
+
+      - name: Calculate Next Version
+        id: semantic
+        if: inputs.version == ''
+        uses: PaulHatch/semantic-version@v5.4.0
+        with:
+          tag_prefix: "v"
+          major_pattern: "(BREAKING CHANGE:|!)"
+          minor_pattern: "/^(feat|refactor)(\\(.*\\))?:/"
+          version_format: "${major}.${minor}.${patch}"
+          user_format_type: "csv"
+          branch: "HEAD"
+
+      - name: Determine Version
+        id: vars
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+          CALCULATED_VERSION: ${{ steps.semantic.outputs.version }}
+        run: |
+          if [ -n "$REQUESTED_VERSION" ]; then
+            echo "VERSION=$REQUESTED_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=$CALCULATED_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+          echo "COMMIT_HASH_SHORT=$(git rev-parse --short=8 HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Validate version format
+        env:
+          VERSION: ${{ steps.vars.outputs.VERSION }}
+        run: |
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Invalid version format '$VERSION'. Expected semver (e.g., 1.2.3)"
+            exit 1
+          fi
+
+      - name: Inject version into source files
+        env:
+          VERSION: ${{ steps.vars.outputs.VERSION }}
+        run: |
+          sed -i "s/__version__ = \".*\"/__version__ = \"$VERSION\"/" aiohttp_jwt/__init__.py
+          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" pyproject.toml
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build package
+        run: |
+          pip install build
+          python -m build
+
+      - name: Check tag does not already exist
+        if: github.event_name == 'push'
+        env:
+          VERSION: ${{ steps.vars.outputs.VERSION }}
+        run: |
+          git fetch --tags
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "::error::Tag v$VERSION already exists. Use workflow_dispatch to re-tag."
+            exit 1
+          fi
+
+      - name: Create Git Tag
+        env:
+          VERSION: ${{ steps.vars.outputs.VERSION }}
+        run: |
+          COMMIT_HASH="$(git rev-parse --short=8 HEAD)"
+
+          git fetch --tags
+
+          echo "Creating tag v$VERSION for commit $COMMIT_HASH"
+          git tag -fa "v$VERSION" -m "Release v$VERSION" HEAD
+
+          echo "Pushing tag v$VERSION..."
+          if git push --force-with-lease=refs/tags/v$VERSION origin "v$VERSION"; then
+            echo "Tag v$VERSION now points to $COMMIT_HASH"
+          else
+            echo "Failed to push tag v$VERSION because the remote reference changed concurrently."
+            echo "Please rerun the workflow to retry."
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.vars.outputs.VERSION }}
+          name: v${{ steps.vars.outputs.VERSION }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          files: dist/*

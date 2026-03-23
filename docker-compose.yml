@@ -1,13 +1,37 @@
 version: "3"
+
+x-common: &common
+  build:
+    context: .
+  volumes:
+    - ./aiohttp_jwt:/var/aiohttp-jwt/aiohttp_jwt
+    - ./tests:/var/aiohttp-jwt/tests
+
 services:
-  aiohttp_jwt_3_9:
+  aiohttp_jwt:
+    image: tenproduct/aiohttp_jwt
+    <<: *common
+
+  aiohttp_jwt_py310:
+    image: tenproduct/aiohttp_jwt_py310
     build:
       context: .
       args:
-        python_version: "3.9"
-    volumes:
-      - ./aiohttp_jwt:/tenplatform/aiohttp-jwt/aiohttp_jwt
-      - ./tests:/tenplatform/aiohttp-jwt/tests
+        PYTHON_VERSIONS: "3.10"
+    <<: *common
 
+  aiohttp_jwt_py311:
+    image: tenproduct/aiohttp_jwt_py311
+    build:
+      context: .
+      args:
+        PYTHON_VERSIONS: "3.11"
+    <<: *common
 
-
+  aiohttp_jwt_py312:
+    image: tenproduct/aiohttp_jwt_py312
+    build:
+      context: .
+      args:
+        PYTHON_VERSIONS: "3.12"
+    <<: *common
