@@ -3,7 +3,7 @@ async-timeout==5.0.1
 atomicwrites==1.4.1
 attrs==26.1.0
 chardet==7.4.3
-coverage==4.5.2
+coverage==7.15.1
 flake8==3.7.6
 idna==2.8
 idna-ssl==1.1.0
